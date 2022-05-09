@@ -14,9 +14,6 @@ import pickle
 #region
 
 masses = {'pion':0.140, 'rho':0.777, 'proton':0.940, 'delta':1.23, 'test':2.2, 'unit':1.0}
-# options = {'-m1':setMass1, '-m2':setMass2, '-mr':setResonance, '-si':setSi, '-g':setg, '-Q2':setQ2, 
-			# '-sc':setScale, '-N':setNumPoints, '-start':setStart, '-end':setEnd, '-A':setFfactor,
-			# '-show':setShowPlots, '-v':'verbose', '-imag':setImag, '-save':savePlot, '-sheet':setSheet}
 
 parser = ap.ArgumentParser()
 parser.add_argument('-m1',default='unit',type=str)
@@ -116,20 +113,14 @@ GData = {'full':np.array([]), 'real':np.array([]), 'imag':np.array([]), 'abs':np
 M2Data = {'full':np.array([]), 'real':np.array([]), 'imag':np.array([]), 'abs':np.array([])}
 WdfData = {'full':np.array([]), 'real':np.array([]), 'imag':np.array([]), 'abs':np.array([])}
 
-rhoWrhoData = []
-FfGData = []
 #endregion
 
 # File opening
 #region
-
-fileNameMrho = "Mrho_" + m1Name + "_" + m2Name + "_" + str(eiFactor) + "_" + str(g) + "_" + str(start) + "_" + str(end) + "_" + str(efSize) + ".txt"
 fileNameG = "G_" + m1Name + "_" + m2Name + "_" + str(eiFactor) + "_" + str(Q2) + "_" + str(start) + "_" + str(end) + "_" + str(efSize) + "_" + str(sheet) + ".txt"
 fileNameWdf = "Wdf_" + m1Name + "_" + m2Name + "_" + str(eiFactor) + "_" + str(Ffactor) + "_" + str(g) + "_" + str(Q2) + "_" + str(start) + "_" + str(end) + "_" + str(efSize) + "_" + str(sheet) + ".txt"
-fileNameWCheck = "WCheck_" + m1Name + "_" + m2Name + "_" + str(eiFactor) + "_" + str(Ffactor) + "_" + str(g) + "_" + str(Q2) + "_" + str(start) + "_" + str(end) + "_" + str(efSize) + ".txt"
 
 fileGOpen = False
-fileMrhoOpen = False
 
 try:
 	with open("./data/"+fileNameG,"rb") as fg:
@@ -140,34 +131,10 @@ except FileNotFoundError:
 	print(fileNameG + " not found!")
 	print("A new one will be created. This may increase run time.")
 
-# try:
-# 	fg = open("../data/"+fileNameG,"r")
-# 	fileGOpen = True
-# except FileNotFoundError:
-# 	print(fileNameG + " not found!")
-# 	print("A new one will be created. This may increase run time.")
-
-# if fileGOpen:
-# 	lines = fg.readlines()
-# 	realGData = [float(i) for i in lines[0].rstrip("\n").split()]
-# 	imagGData = [float(i) for i in lines[1].rstrip("\n").split()]
-# 	absGData = [abs(complex(i)) for i in lines[2].rstrip("\n").split()]
-
-# try:
-# 	fmp = open("../data/"+fileNameMrho,"r")
-# 	fileMrhoOpen = True
-# 	fmp.close()
-# except FileNotFoundError:
-# 	print(fileNameMrho + " not found!")
-# 	print("A new one will be created. This may increase run time.")
-
 #endregion
 
 # Calculate data
 #region
-
-mg1 = func.M(pow(1.1,2),m1,m2,xi,mr,g)
-mg2 = func.M(pow(1.2,2),m1,m2,xi,mr,g)
 
 for i,ef in enumerate(efRange):
 	sf = pow(ef,2)
@@ -212,8 +179,6 @@ for i,ef in enumerate(efRange):
 	M2Data['imag'] = np.append(M2Data['imag'],M2.imag)
 	M2Data['abs'] = np.append(M2Data['abs'],abs(M2))
 
-	# rhof = func.rho(sf,m1,m2,xi)
-	# np.append(mrhoData,abs(rhof*M2))
 
 ff2 = AData['full']+fData*GData['full']
 Wdf = M1Data['full']*ff2*M2Data['full']
@@ -237,56 +202,6 @@ if not fileGOpen:
 
 with open("./data/"+fileNameWdf,"w+b") as fwdf:
 	pickle.dump(WdfData,fwdf)
-
-# if not fileGOpen:
-# 	fg = open("../data/"+fileNameG,"w+")
-
-# 	for i in realGData:
-# 		fg.write(str(i) + " ")
-# 	fg.write("\n")
-
-# 	for i in imagGData:
-# 		fg.write(str(i) + " ")
-# 	fg.write("\n")
-
-# 	for i in absGData:
-# 		fg.write(str(i) + " ")
-
-# fg.close()
-
-# fwdf = open("../data/"+fileNameWdf,"w+")
-
-# for i in realWdfData:
-# 	fwdf.write(str(i) + " ")
-# fwdf.write("\n")
-
-# for i in imagWdfData:
-# 	fwdf.write(str(i) + " ")
-# fwdf.write("\n")
-
-# for i in absWdfData:
-# 	fwdf.write(str(i) + " ")
-
-# fwdf.close()
-
-# if not fileMrhoOpen:
-# 	fmp = open("../data/"+fileNameMrho,"w+")
-
-# 	for i in mrhoData:
-# 		fmp.write(str(i) + " ")
-# 	fmp.close()
-
-# fwc = open("../data/"+fileNameWCheck,"w+")
-
-# for i in rhoWrhoData:
-# 	fwc.write(str(i) + " ")
-# fwc.write("\n")
-
-# for i in FfGData:
-# 	fwc.write(str(i) + " ")
-# fwc.write("\n")
-
-# fwc.close()
 
 #endregion
 
