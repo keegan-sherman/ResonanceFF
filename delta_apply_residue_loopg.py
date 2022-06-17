@@ -6,7 +6,6 @@ import mpmath
 import physfunc as pf
 import math
 import cmath
-from Pole_Finder_for_BW_class import BWPoleFinder
 import scipy
 from scipy.integrate import quad
 import matplotlib.pyplot as plt
