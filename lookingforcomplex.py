@@ -6,7 +6,6 @@ import mpmath
 import physfunc as pf
 import math
 import cmath
-from Pole_Finder_for_BW_class import BWPoleFinder
 import scipy
 from scipy.integrate import quad
 import matplotlib.colors
@@ -668,52 +667,52 @@ def vecWdfII(z):
 """"""""""""""""""""""""""""""""""""""
 """"""""""""""""""""""""""""""""""""""
 
-def integrate_on_contour(function,path):
-    result = 0.0
-    for n in np.arange(len(path)-1):
-        z0 = path[n]
-        dz = path[n+1]-path[n]
-        real_integrand = lambda x: np.real(function(z0+x*dz)*dz)
-        imag_integrand = lambda x: np.imag(function(z0+x*dz)*dz)
-        real_result = scipy.integrate.quad(real_integrand,0.0,1.0)[0]
-        imag_result = scipy.integrate.quad(imag_integrand,0.0,1.0)[0]
-        result += real_result + 1j*imag_result
-    return result
+# def integrate_on_contour(function,path):
+#     result = 0.0
+#     for n in np.arange(len(path)-1):
+#         z0 = path[n]
+#         dz = path[n+1]-path[n]
+#         real_integrand = lambda x: np.real(function(z0+x*dz)*dz)
+#         imag_integrand = lambda x: np.imag(function(z0+x*dz)*dz)
+#         real_result = scipy.integrate.quad(real_integrand,0.0,1.0)[0]
+#         imag_result = scipy.integrate.quad(imag_integrand,0.0,1.0)[0]
+#         result += real_result + 1j*imag_result
+#     return result
 
-def contourtest(z):
-    return 3/(z-(4.05+.25j))
+# def contourtest(z):
+#     return 3/(z-(4.05+.25j))
 
-C1 = 4.721 - .48j
-C2 = 4.722 - .48j
-C3 = 4.722 - .479j
-C4 = 4.721 - .479j
-C5 = C1
+# C1 = 4.721 - .48j
+# C2 = 4.722 - .48j
+# C3 = 4.722 - .479j
+# C4 = 4.721 - .479j
+# C5 = C1
 
-B1 = 4.721 + .479j
-B2 = 4.722 + .479j
-B3 = 4.722 + .48j
-B4 = 4.721 + .48j
-B5 = B1
+# B1 = 4.721 + .479j
+# B2 = 4.722 + .479j
+# B3 = 4.722 + .48j
+# B4 = 4.721 + .48j
+# B5 = B1
 
-D1 = .2365 - .001*1j
-D2 = .2365 + .001*1j
-D3 = .2375 + .001*1j
-D4 = .2375 - .001*1j
-D5 = D1
+# D1 = .2365 - .001*1j
+# D2 = .2365 + .001*1j
+# D3 = .2375 + .001*1j
+# D4 = .2375 - .001*1j
+# D5 = D1
 
-C = [C1,C2,C3,C4,C5]
-BA = [B1,B2,B3,B4,B5]
-D = [D5,D4,D3,D2,D1]
+# C = [C1,C2,C3,C4,C5]
+# BA = [B1,B2,B3,B4,B5]
+# D = [D5,D4,D3,D2,D1]
 
 
-# contour integration
-integral1 = integrate_on_contour(lambda z: MII(z),C)
-integral = integrate_on_contour(lambda x: MII(x),BA)
-integral2 = integrate_on_contour(lambda z: MII(z),D)
+# # contour integration
+# integral1 = integrate_on_contour(lambda z: MII(z),C)
+# integral = integrate_on_contour(lambda x: MII(x),BA)
+# integral2 = integrate_on_contour(lambda z: MII(z),D)
 
-print(r'Res(4.72 + .479i) = ' + str(integral/(2*math.pi*1j)))
-print(r'Res(4.72 - .479i) = ' + str(integral1/(2*math.pi*1j)))
-print(r'Res(.237) = ' + str(integral2/(2*math.pi*1j)))
+# print(r'Res(4.72 + .479i) = ' + str(integral/(2*math.pi*1j)))
+# print(r'Res(4.72 - .479i) = ' + str(integral1/(2*math.pi*1j)))
+# print(r'Res(.237) = ' + str(integral2/(2*math.pi*1j)))
 
 # f = lambda z: np.real(csqrt(z))
 # g = lambda z: np.real(csqrt2nd(z))
