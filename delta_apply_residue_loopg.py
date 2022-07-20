@@ -6,6 +6,7 @@ import mpmath
 import physfunc as pf
 import math
 import cmath
+# from Pole_Finder_for_BW_class import BWPoleFinder
 import scipy
 from scipy.integrate import quad
 import matplotlib.pyplot as plt
@@ -229,6 +230,40 @@ def imagF12(x,si,sf,Q2):
     fracf = numf/denf
     return np.imag(lead * fracf)
 
+def crits(m1,m2,Q2,eistar,efstar,eps):
+    points = []
+    sf = (efstar**2)
+    sth = pow((m1+m2),2)
+    si = eistar**2
+    l = (Q2+sf+si)
+
+    A1 = pow((-1*(Q2+sf+si)/si),2) - (4*sf/si)
+    B1 = 2*(-1*(Q2+sf+si)/si)*(1 + (pow(m2,2)-pow(m1,2))/si) + (4*(pow(m2,2)-pow(m1,2))/si) + (4*sf/si)
+    C1 = pow((1 + (pow(m2,2)-pow(m1,2))/si),2) - (4*(pow(m2,2))/si)
+
+
+    if pow(B1,2) >= 4*A1*C1 and A1 != 0:
+        point1 = (((-B1 + math.sqrt((B1**2)-4*A1*C1))/(2*A1)))
+        point2 = (((-B1 - math.sqrt((B1**2)-4*A1*C1))/(2*A1)))
+        # point1 = (((-B1 + csqrt((B1**2)-4*A1*C1))/(2*A1)))
+        # point2 = (((-B1 - csqrt((B1**2)-4*A1*C1))/(2*A1)))
+        if point1 > 0 and point1 < 1:
+            points.append(point1)
+        if point2 > 0 and point2 < 1:
+            points.append(point2)
+
+    A2 = sf
+    B2 = ((m1**2)-(m2**2)-sf)
+    C2 = (m2**2)
+
+    if sf >= sth:
+        points.append(((-B2 + math.sqrt((B2**2)-4*A2*C2))/(2*A2)))
+        points.append(((-B2 - math.sqrt((B2**2)-4*A2*C2))/(2*A2)))
+        # points.append(((-B2 + csqrt((B2**2)-4*A2*C2))/(2*A2)))
+        # points.append(((-B2 - csqrt((B2**2)-4*A2*C2))/(2*A2)))
+
+    return points
+
 
 #####################
 #this is the TRUE M
@@ -239,15 +274,15 @@ def MII(sf,g):
     return MII_real(sf,g) + (1j*(MII_imag(sf,g)))
 
 def IaFr(si,sf,Q2):
-    # crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
-    # IaR,error = scipy.integrate.quad(realF,0,1,args=(si,sf,Q2),points=crit)
-    IaR,error = scipy.integrate.quad(realF,0,1,args=(si,sf,Q2))
+    crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    IaR,error = scipy.integrate.quad(realF,0,1,args=(si,sf,Q2),points=crit)
+    # IaR,error = scipy.integrate.quad(realF,0,1,args=(si,sf,Q2))
     return (IaR)
 
 def IaFi(si,sf,Q2):
-    # crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
-    # IaI,error2 = scipy.integrate.quad(imagF,0,1,args=(si,sf,Q2),points=crit)
-    IaI,error2 = scipy.integrate.quad(imagF,0,1,args=(si,sf,Q2))
+    crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    IaI,error2 = scipy.integrate.quad(imagF,0,1,args=(si,sf,Q2),points=crit)
+    # IaI,error2 = scipy.integrate.quad(imagF,0,1,args=(si,sf,Q2))
     return (IaI)
 
 def IaFr1(si,sf,Q2):
@@ -629,15 +664,38 @@ real = []
 imag = []
 gval = [0.1,.5,1,1.5,2,2.5,3,3.5,4,4.5,5]
 listt = [con,tour,loop,ct,lt,rval,C,qval,wval,tval,kval]
+roots = []
+
+for gv in gval:
+    # print(gv)
+    a = 1
+    # print("a = " + str(1))
+    # print("a = " + str(a))
+    b = -(2*mr**2)
+    # print("b = " + str(-2*mr**2))
+    # print("b = " + str(b))
+    c = (mr**4 + (mr**4*gv**4)/(144*(math.pi)**2))
+    # print("c = " + str(mr**4 + (mr**4*gv**4)/(144*(math.pi)**2)))
+    # print("c = " + str(c))
+    d = -(mr**4*gv**4/(36*(math.pi)**2))
+    # print("d = " + str(-(mr**4*gv**4/(36*(math.pi)**2))))
+    # print("d = " + str(d))
+    coeff = [a,b,c,d]
+    roots.append(np.roots(coeff)[1])
+
+# print(roots)
+
+# print(roots[1])
 
 for i,g in enumerate(gval):
     lyst = listt[i]
+    sr = roots[i]
 
     integral = integrate_on_contour(lambda z: MII(z,g),lyst)
     residue = integral/(2*math.pi*1j)
 
     for Q2s in q2range:
-        sr = 4.7215 - .4794j
+        # sr = 4.7215 - .4794j
         scale = 0.1
 
         G = GII(sr,sr,Q2s)
@@ -683,6 +741,140 @@ for h in range(11000):
     elif h >= 10000:
         data111.append(real[h])
         data211.append(imag[h])
+
+s_p = [4.839169169169169, 4.839169169169169, 4.839169169169169, 4.834174174174174, 4.819189189189189, 4.784224224224224, 4.719289289289289, 4.6093993993994, 4.404604604604605, 4.01, 4.01]
+# s_p = [4.839169169169169, 4.839169169169169, 4.839169169169169, 4.834174174174174, 4.819189189189189, 4.784224224224224, 4.719289289289289, 4.6093993993994, 4.404604604604605, 4.01, 4.01]
+
+real1 = []
+imag1 = []
+data31 = []
+data32 = []
+data33 = []
+data34 = []
+data35 = []
+data36 = []
+data37 = []
+data38 = []
+data39 = []
+data310 = []
+data311 = []
+data41 = []
+data42 = []
+data43 = []
+data44 = []
+data45 = []
+data46 = []
+data47 = []
+data48 = []
+data49 = []
+data410 = []
+data411 = []
+
+for i,g in enumerate(gval):
+    lyst = listt[i]
+    sp = s_p[i]
+
+    # integral = integrate_on_contour(lambda z: MII(z,g),lyst)
+    # residue = integral/(2*math.pi*1j)
+
+    for Q2s in q2range:
+        # sr = 4.7215 - .4794j
+        scale = 0.1
+
+        # G = GII(sp,sp,Q2s)
+        G = GI(sp,sp,Q2s)
+        fr = f(Q2s)
+        Ar = scale*fr/g**2
+
+        c = 2*g*mr/(np.sqrt(3*xi))
+
+
+        frr = (c**2*(fr*G+Ar))
+
+        real1.append(np.real(frr))
+        imag1.append(np.imag(frr))
+
+for w in range(11000):
+    if w < 1000:
+        data31.append(real1[w])
+        data41.append(imag1[w])
+    elif w >= 1000 and w < 2000:
+        data32.append(real1[w])
+        data42.append(imag1[w])
+    elif w >= 2000 and w < 3000:
+        data33.append(real1[w])
+        data43.append(imag1[w])
+    elif w >= 3000 and w < 4000:
+        data34.append(real1[w])
+        data44.append(imag1[w])
+    elif w >= 4000 and w < 5000:
+        data35.append(real1[w])
+        data45.append(imag1[w])
+    elif w >= 5000 and w < 6000:
+        data36.append(real1[w])
+        data46.append(imag1[w])
+    elif w >= 6000 and w < 7000:
+        data37.append(real1[w])
+        data47.append(imag1[w])
+    elif w >= 7000 and w < 8000:
+        data38.append(real1[w])
+        data48.append(imag1[w])
+    elif w >= 8000 and w < 9000:
+        data39.append(real1[w])
+        data49.append(imag1[w])
+    elif w >= 9000 and w < 10000:
+        data310.append(real1[w])
+        data410.append(imag1[w])
+    elif w >= 10000:
+        data311.append(real1[w])
+        data411.append(imag1[w])
+
+data51 = []
+data52 = []
+data53 = []
+data54 = []
+data55 = []
+data56 = []
+data57 = []
+data58 = []
+data59 = []
+data510 = []
+data511 = []
+data61 = []
+data62 = []
+data63 = []
+data64 = []
+data65 = []
+data66 = []
+data67 = []
+data68 = []
+data69 = []
+data610 = []
+data611 = []
+
+for i,m in enumerate(data11):
+    data51.append(data11[i]/data31[i])
+    data61.append(data21[i]/data41[i])
+    data52.append(data12[i]/data32[i])
+    data62.append(data22[i]/data42[i])
+    data53.append(data13[i]/data33[i])
+    data63.append(data23[i]/data43[i])
+    data54.append(data14[i]/data34[i])
+    data64.append(data24[i]/data44[i])
+    data55.append(data15[i]/data35[i])
+    data65.append(data25[i]/data45[i])
+    data56.append(data16[i]/data36[i])
+    data66.append(data26[i]/data46[i])
+    data57.append(data17[i]/data38[i])
+    data67.append(data27[i]/data47[i])
+    data58.append(data18[i]/data38[i])
+    data68.append(data28[i]/data48[i])
+    data59.append(data19[i]/data39[i])
+    data69.append(data29[i]/data49[i])
+    data510.append(data110[i]/data310[i])
+    data610.append(data210[i]/data410[i])
+    data511.append(data111[i]/data311[i])
+    data611.append(data211[i]/data411[i])
 
 # for Q2s in q2range:
 #     sr = 4.7215 - .4794j
@@ -794,20 +986,91 @@ mpl.rcParams['mathtext.bf'] = 'Yrsa:bold'
 # plt.ylabel(r'$Re[f_{R {\rightarrow} R}]$',fontname="Yrsa",size=10)
 # plt.show()
 
+# plt.axhline(0, color = 'k')
+# plt.axhline(0, color = 'k')
+# plt.plot(q2range,data21, color = 'hotpink',label = 'g = .1')
+# plt.plot(q2range,data22, color = 'deeppink',label = 'g = .5')
+# plt.plot(q2range,data23, color = 'magenta',label = 'g = 1')
+# plt.plot(q2range,data24, color = 'fuchsia',label = 'g = 1.5')
+# plt.plot(q2range,data25, color = 'darkmagenta',label = 'g = 2')
+# plt.plot(q2range,data26, color = 'red',label = 'g = 2.5')
+# plt.plot(q2range,data27, color = 'lightcoral',label = 'g = 3')
+# plt.plot(q2range,data28, color = 'crimson',label = 'g = 3.5')
+# plt.plot(q2range,data29, color = 'darkred',label = 'g = 4')
+# plt.plot(q2range,data210, color = 'purple',label = 'g = 4.5')
+# plt.plot(q2range,data211, color = 'violet',label = 'g = 5')
+# plt.plot(q2range,data41, color = 'hotpink',label = 'g = .1')
+# plt.plot(q2range,data42, color = 'deeppink',label = 'g = .5')
+# plt.plot(q2range,data43, color = 'magenta',label = 'g = 1')
+# plt.plot(q2range,data44, color = 'fuchsia',label = 'g = 1.5')
+# plt.plot(q2range,data45, color = 'darkmagenta',label = 'g = 2')
+# plt.plot(q2range,data46, color = 'red',label = 'g = 2.5')
+# plt.plot(q2range,data47, color = 'lightcoral',label = 'g = 3')
+# plt.plot(q2range,data48, color = 'crimson',label = 'g = 3.5')
+# plt.plot(q2range,data49, color = 'darkred',label = 'g = 4')
+# plt.plot(q2range,data410, color = 'purple',label = 'g = 4.5')
+# plt.plot(q2range,data411, color = 'violet',label = 'g = 5')
+# # plt.legend()
+# plt.title(r'$f_{R {\rightarrow} R}$')
+# plt.xlabel('$Q^2$')
+# plt.ylabel(r'$Im[f_{R {\rightarrow} R}]$',fontname="Yrsa",size=10)
+# plt.show()
+
+# plt.axhline(0, color = 'k')
+# plt.axhline(0, color = 'k')
+# plt.plot(q2range,data21, color = 'hotpink',label = 'g = .1')
+# plt.plot(q2range,data22, color = 'deeppink',label = 'g = .5')
+# plt.plot(q2range,data23, color = 'magenta',label = 'g = 1')
+# plt.plot(q2range,data24, color = 'fuchsia',label = 'g = 1.5')
+# plt.plot(q2range,data25, color = 'darkmagenta',label = 'g = 2')
+# plt.plot(q2range,data26, color = 'red',label = 'g = 2.5')
+# plt.plot(q2range,data27, color = 'lightcoral',label = 'g = 3')
+# plt.plot(q2range,data28, color = 'crimson',label = 'g = 3.5')
+# plt.plot(q2range,data29, color = 'darkred',label = 'g = 4')
+# plt.plot(q2range,data210, color = 'purple',label = 'g = 4.5')
+# plt.plot(q2range,data211, color = 'violet',label = 'g = 5')
+# plt.plot(q2range,data41, color = 'hotpink',label = 'g = .1')
+# plt.plot(q2range,data42, color = 'deeppink',label = 'g = .5')
+# plt.plot(q2range,data43, color = 'magenta',label = 'g = 1')
+# plt.plot(q2range,data44, color = 'fuchsia',label = 'g = 1.5')
+# plt.plot(q2range,data45, color = 'darkmagenta',label = 'g = 2')
+# plt.plot(q2range,data46, color = 'red',label = 'g = 2.5')
+# plt.plot(q2range,data47, color = 'lightcoral',label = 'g = 3')
+# plt.plot(q2range,data48, color = 'crimson',label = 'g = 3.5')
+# plt.plot(q2range,data49, color = 'darkred',label = 'g = 4')
+# plt.plot(q2range,data410, color = 'purple',label = 'g = 4.5')
+# plt.plot(q2range,data411, color = 'violet',label = 'g = 5')
+# # plt.legend()
+# plt.title(r'$f_{R {\rightarrow} R}$')
+# plt.xlabel('$Q^2$')
+# plt.ylabel(r'$Im[f_{R {\rightarrow} R}]$',fontname="Yrsa",size=10)
+# plt.show()
+
 plt.axhline(0, color = 'k')
 plt.axhline(0, color = 'k')
-plt.plot(q2range,data21, color = 'hotpink',label = 'g = .1')
-plt.plot(q2range,data22, color = 'deeppink',label = 'g = .5')
-plt.plot(q2range,data23, color = 'magenta',label = 'g = 1')
-plt.plot(q2range,data24, color = 'fuchsia',label = 'g = 1.5')
-plt.plot(q2range,data25, color = 'darkmagenta',label = 'g = 2')
-plt.plot(q2range,data26, color = 'red',label = 'g = 2.5')
-plt.plot(q2range,data27, color = 'lightcoral',label = 'g = 3')
-plt.plot(q2range,data28, color = 'crimson',label = 'g = 3.5')
-plt.plot(q2range,data29, color = 'darkred',label = 'g = 4')
-plt.plot(q2range,data210, color = 'purple',label = 'g = 4.5')
-plt.plot(q2range,data211, color = 'violet',label = 'g = 5')
-plt.legend()
+plt.plot(q2range,data61, color = 'hotpink',label = 'g = .1')
+plt.plot(q2range,data62, color = 'deeppink',label = 'g = .5')
+plt.plot(q2range,data63, color = 'magenta',label = 'g = 1')
+plt.plot(q2range,data64, color = 'fuchsia',label = 'g = 1.5')
+plt.plot(q2range,data65, color = 'darkmagenta',label = 'g = 2')
+plt.plot(q2range,data66, color = 'red',label = 'g = 2.5')
+plt.plot(q2range,data67, color = 'lightcoral',label = 'g = 3')
+plt.plot(q2range,data68, color = 'crimson',label = 'g = 3.5')
+plt.plot(q2range,data69, color = 'darkred',label = 'g = 4')
+# plt.plot(q2range,data610, color = 'purple',label = 'g = 4.5')
+# plt.plot(q2range,data611, color = 'violet',label = 'g = 5')
+# plt.plot(q2range,data41, color = 'hotpink',label = 'g = .1')
+# plt.plot(q2range,data42, color = 'deeppink',label = 'g = .5')
+# plt.plot(q2range,data43, color = 'magenta',label = 'g = 1')
+# plt.plot(q2range,data44, color = 'fuchsia',label = 'g = 1.5')
+# plt.plot(q2range,data45, color = 'darkmagenta',label = 'g = 2')
+# plt.plot(q2range,data46, color = 'red',label = 'g = 2.5')
+# plt.plot(q2range,data47, color = 'lightcoral',label = 'g = 3')
+# plt.plot(q2range,data48, color = 'crimson',label = 'g = 3.5')
+# plt.plot(q2range,data49, color = 'darkred',label = 'g = 4')
+# plt.plot(q2range,data410, color = 'purple',label = 'g = 4.5')
+# plt.plot(q2range,data411, color = 'violet',label = 'g = 5')
+# plt.legend()
 plt.title(r'$f_{R {\rightarrow} R}$')
 plt.xlabel('$Q^2$')
 plt.ylabel(r'$Im[f_{R {\rightarrow} R}]$',fontname="Yrsa",size=10)
