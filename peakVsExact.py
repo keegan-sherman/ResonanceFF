@@ -264,7 +264,7 @@ ax.spines['bottom'].set_visible(False)
 for i,g in enumerate(gRange):
 	plt.scatter(srData[i].real,srData[i].imag,color=colors[g])
 
-plt.xlim(0.9, 9.0)
+plt.xlim(2.0, 9.0)
 plt.ylim(-1.0, 0.03)
 
 ax.set_ylabel(r'Im(s) (GeV$^{2}$)', fontname="Futura", size=20)
