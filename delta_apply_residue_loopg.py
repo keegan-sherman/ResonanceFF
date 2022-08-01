@@ -230,39 +230,41 @@ def imagF12(x,si,sf,Q2):
     fracf = numf/denf
     return np.imag(lead * fracf)
 
-def crits(m1,m2,Q2,eistar,efstar,eps):
-    points = []
-    sf = (efstar**2)
-    sth = pow((m1+m2),2)
-    si = eistar**2
-    l = (Q2+sf+si)
+def quadraticSolution(a,b,c):
+	sqrtTerm = math.sqrt(pow(b,2)-4*a*c)
+	point1 = (-b-sqrtTerm)/(2*a)
+	point2 = (-b+sqrtTerm)/(2*a)
+	return point1, point2
 
-    A1 = pow((-1*(Q2+sf+si)/si),2) - (4*sf/si)
-    B1 = 2*(-1*(Q2+sf+si)/si)*(1 + (pow(m2,2)-pow(m1,2))/si) + (4*(pow(m2,2)-pow(m1,2))/si) + (4*sf/si)
-    C1 = pow((1 + (pow(m2,2)-pow(m1,2))/si),2) - (4*(pow(m2,2))/si)
+def crits(m1,m2,Q2,si,sf):
+	points = []
 
+	# Critical points for A^{2} = -B
+	alpha = -1*(Q2+sf+si)/si
+	beta = 1 + (pow(m2,2)-pow(m1,2))/si
+	gamma = 4*pow(m2,2)/si
+	eta = 4*(pow(m2,2)-pow(m1,2))/si
+	phi = 4*sf/si
+	a = pow(alpha,2) - phi
+	b = 2*alpha*beta + eta + phi
+	c = pow(beta,2) - gamma
+	if pow(b,2) >= 4*a*c and a != 0:
+		point1, point2 = quadraticSolution(a,b,c)
+		if point1 > 0 and point1 < 1:
+			points.append(point1)
+		if point2 > 0 and point1 < 1:
+			points.append(point2)
 
-    if pow(B1,2) >= 4*A1*C1 and A1 != 0:
-        point1 = (((-B1 + math.sqrt((B1**2)-4*A1*C1))/(2*A1)))
-        point2 = (((-B1 - math.sqrt((B1**2)-4*A1*C1))/(2*A1)))
-        # point1 = (((-B1 + csqrt((B1**2)-4*A1*C1))/(2*A1)))
-        # point2 = (((-B1 - csqrt((B1**2)-4*A1*C1))/(2*A1)))
-        if point1 > 0 and point1 < 1:
-            points.append(point1)
-        if point2 > 0 and point2 < 1:
-            points.append(point2)
+	# Critical points for B = 0
+	if sf >= pow(m1+m2,2):
+		b = sf + pow(m2,2) - pow(m1,2)
+		point1, point2 = quadraticSolution(sf,-b,pow(m2,2))
+		if point1 > 0 and point1 < 1:
+			points.append(point1)
+		if point2 > 0 and point2 < 1:
+			points.append(point2)
 
-    A2 = sf
-    B2 = ((m1**2)-(m2**2)-sf)
-    C2 = (m2**2)
-
-    if sf >= sth:
-        points.append(((-B2 + math.sqrt((B2**2)-4*A2*C2))/(2*A2)))
-        points.append(((-B2 - math.sqrt((B2**2)-4*A2*C2))/(2*A2)))
-        # points.append(((-B2 + csqrt((B2**2)-4*A2*C2))/(2*A2)))
-        # points.append(((-B2 - csqrt((B2**2)-4*A2*C2))/(2*A2)))
-
-    return points
+	return points
 
 
 #####################
@@ -274,13 +276,13 @@ def MII(sf,g):
     return MII_real(sf,g) + (1j*(MII_imag(sf,g)))
 
 def IaFr(si,sf,Q2):
-    crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    crit = np.real(crits(m1,m2,Q2.real,si.real,sf.real))
     IaR,error = scipy.integrate.quad(realF,0,1,args=(si,sf,Q2),points=crit)
     # IaR,error = scipy.integrate.quad(realF,0,1,args=(si,sf,Q2))
     return (IaR)
 
 def IaFi(si,sf,Q2):
-    crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    crit = np.real(crits(m1,m2,Q2.real,si.real,sf.real))
     IaI,error2 = scipy.integrate.quad(imagF,0,1,args=(si,sf,Q2),points=crit)
     # IaI,error2 = scipy.integrate.quad(imagF,0,1,args=(si,sf,Q2))
     return (IaI)
@@ -596,9 +598,6 @@ wval = [w1,w2,w3,w4,w5]
 tval = [t1,t2,t3,t4,t5]
 kval = [k1,k2,k3,k4,k5]
 
-# listt = [con,tour,loop,ct,lt,rval,C,qval,wval,tval,kval]
-
-
 data1swdfi = []
 data1swdfr = []
 data2swdfi = []
@@ -606,7 +605,6 @@ data2swdfr = []
 srange = []
 srangee = []
 
-# print(efrange)
 RElist = [1.5,2.5]
 
 
@@ -638,28 +636,6 @@ def Pfz(efs,Q2):
 
 q2range = np.linspace(0,4,1000)
 
-# for ef in refrange:
-#     for Q2s in q2range:
-#         P1 = np.array([2.173-.110117j,0,0,0])
-#
-#         Pf = Pfz(ef,Q2s)
-#         P2 = np.array([ef-.110117,0,0,Pf])
-#
-#         si = pf.dotprod(P1,P1)
-#         sf = pf.dotprod(P2,P2)
-#
-#         G = GII(si,sf,Q2s)
-#         f = f(Q2s)
-#         A = AparamII(P1,P2,Q2s)
-#
-#         residue = integral1/(2*math.pi*1j)
-#         reduce = residue**2
-#
-#         frr = reduce*(f*G+A)
-#
-#         data1.append(np.real(frr))
-#         data2.append(np.imag(frr))
-
 real = []
 imag = []
 gval = [0.1,.5,1,1.5,2,2.5,3,3.5,4,4.5,5]
@@ -667,25 +643,15 @@ listt = [con,tour,loop,ct,lt,rval,C,qval,wval,tval,kval]
 roots = []
 
 for gv in gval:
-    # print(gv)
     a = 1
-    # print("a = " + str(1))
-    # print("a = " + str(a))
     b = -(2*mr**2)
-    # print("b = " + str(-2*mr**2))
-    # print("b = " + str(b))
     c = (mr**4 + (mr**4*gv**4)/(144*(math.pi)**2))
-    # print("c = " + str(mr**4 + (mr**4*gv**4)/(144*(math.pi)**2)))
-    # print("c = " + str(c))
     d = -(mr**4*gv**4/(36*(math.pi)**2))
-    # print("d = " + str(-(mr**4*gv**4/(36*(math.pi)**2))))
-    # print("d = " + str(d))
     coeff = [a,b,c,d]
     roots.append(np.roots(coeff)[1])
 
-# print(roots)
-
-# print(roots[1])
+realPole = {}
+imagPole = {}
 
 for i,g in enumerate(gval):
     lyst = listt[i]
@@ -706,44 +672,66 @@ for i,g in enumerate(gval):
 
         real.append(np.real(frr))
         imag.append(np.imag(frr))
+        # sr = 4.7215 - .4794j
+        scale = 0.1
+        lyst = listt[i]
+        sr = roots[i]
 
-for h in range(11000):
-    if h < 1000:
-        data11.append(real[h])
-        data21.append(imag[h])
-    elif h >= 1000 and h < 2000:
-        data12.append(real[h])
-        data22.append(imag[h])
-    elif h >= 2000 and h < 3000:
-        data13.append(real[h])
-        data23.append(imag[h])
-    elif h >= 3000 and h < 4000:
-        data14.append(real[h])
-        data24.append(imag[h])
-    elif h >= 4000 and h < 5000:
-        data15.append(real[h])
-        data25.append(imag[h])
-    elif h >= 5000 and h < 6000:
-        data16.append(real[h])
-        data26.append(imag[h])
-    elif h >= 6000 and h < 7000:
-        data17.append(real[h])
-        data27.append(imag[h])
-    elif h >= 7000 and h < 8000:
-        data18.append(real[h])
-        data28.append(imag[h])
-    elif h >= 8000 and h < 9000:
-        data19.append(real[h])
-        data29.append(imag[h])
-    elif h >= 9000 and h < 10000:
-        data110.append(real[h])
-        data210.append(imag[h])
-    elif h >= 10000:
-        data111.append(real[h])
-        data211.append(imag[h])
+        integral = integrate_on_contour(lambda z: MII(z,g),lyst)
+        residue = integral/(2*math.pi*1j)
+
+        G = GII(sr,sr,Q2s)
+        fr = f(Q2s)
+        Ar = scale*fr/g**2
+
+        frr = (-residue*(fr*G+Ar))
+
+        real.append(np.real(frr))
+        imag.append(np.imag(frr))
+
+    realPole[g]=real
+    imagPole[g]=imag
+    real = []
+    imag = []
+
+print(len(realPole[2]))
+
+# for h in range(11000):
+#     if h < 1000:
+#         data11.append(real[h])
+#         data21.append(imag[h])
+#     elif h >= 1000 and h < 2000:
+#         data12.append(real[h])
+#         data22.append(imag[h])
+#     elif h >= 2000 and h < 3000:
+#         data13.append(real[h])
+#         data23.append(imag[h])
+#     elif h >= 3000 and h < 4000:
+#         data14.append(real[h])
+#         data24.append(imag[h])
+#     elif h >= 4000 and h < 5000:
+#         data15.append(real[h])
+#         data25.append(imag[h])
+#     elif h >= 5000 and h < 6000:
+#         data16.append(real[h])
+#         data26.append(imag[h])
+#     elif h >= 6000 and h < 7000:
+#         data17.append(real[h])
+#         data27.append(imag[h])
+#     elif h >= 7000 and h < 8000:
+#         data18.append(real[h])
+#         data28.append(imag[h])
+#     elif h >= 8000 and h < 9000:
+#         data19.append(real[h])
+#         data29.append(imag[h])
+#     elif h >= 9000 and h < 10000:
+#         data110.append(real[h])
+#         data210.append(imag[h])
+#     elif h >= 10000:
+#         data111.append(real[h])
+#         data211.append(imag[h])
 
 s_p = [4.839169169169169, 4.839169169169169, 4.839169169169169, 4.834174174174174, 4.819189189189189, 4.784224224224224, 4.719289289289289, 4.6093993993994, 4.404604604604605, 4.01, 4.01]
-# s_p = [4.839169169169169, 4.839169169169169, 4.839169169169169, 4.834174174174174, 4.819189189189189, 4.784224224224224, 4.719289289289289, 4.6093993993994, 4.404604604604605, 4.01, 4.01]
 
 real1 = []
 imag1 = []
@@ -770,64 +758,72 @@ data49 = []
 data410 = []
 data411 = []
 
-for i,g in enumerate(gval):
-    lyst = listt[i]
-    sp = s_p[i]
-
-    # integral = integrate_on_contour(lambda z: MII(z,g),lyst)
-    # residue = integral/(2*math.pi*1j)
-
-    for Q2s in q2range:
-        # sr = 4.7215 - .4794j
-        scale = 0.1
-
-        # G = GII(sp,sp,Q2s)
-        G = GI(sp,sp,Q2s)
-        fr = f(Q2s)
-        Ar = scale*fr/g**2
-
-        c = 2*g*mr/(np.sqrt(3*xi))
-
-
-        frr = (c**2*(fr*G+Ar))
-
-        real1.append(np.real(frr))
-        imag1.append(np.imag(frr))
-
-for w in range(11000):
-    if w < 1000:
-        data31.append(real1[w])
-        data41.append(imag1[w])
-    elif w >= 1000 and w < 2000:
-        data32.append(real1[w])
-        data42.append(imag1[w])
-    elif w >= 2000 and w < 3000:
-        data33.append(real1[w])
-        data43.append(imag1[w])
-    elif w >= 3000 and w < 4000:
-        data34.append(real1[w])
-        data44.append(imag1[w])
-    elif w >= 4000 and w < 5000:
-        data35.append(real1[w])
-        data45.append(imag1[w])
-    elif w >= 5000 and w < 6000:
-        data36.append(real1[w])
-        data46.append(imag1[w])
-    elif w >= 6000 and w < 7000:
-        data37.append(real1[w])
-        data47.append(imag1[w])
-    elif w >= 7000 and w < 8000:
-        data38.append(real1[w])
-        data48.append(imag1[w])
-    elif w >= 8000 and w < 9000:
-        data39.append(real1[w])
-        data49.append(imag1[w])
-    elif w >= 9000 and w < 10000:
-        data310.append(real1[w])
-        data410.append(imag1[w])
-    elif w >= 10000:
-        data311.append(real1[w])
-        data411.append(imag1[w])
+# realPeak = {}
+# imagPeak = {}
+#
+# for i,g in enumerate(gval):
+#     lyst = listt[i]
+#     sp = s_p[i]
+#
+#     # integral = integrate_on_contour(lambda z: MII(z,g),lyst)
+#     # residue = integral/(2*math.pi*1j)
+#
+#     for Q2s in q2range:
+#         # sr = 4.7215 - .4794j
+#         scale = 0.1
+#
+#         # G = GII(sp,sp,Q2s)
+#         G = GI(sp,sp,Q2s)
+#         fr = f(Q2s)
+#         Ar = scale*fr/g**2
+#
+#         c = 2*g*mr/(np.sqrt(3*xi))
+#
+#
+#         frr = (c**2*(fr*G+Ar))
+#
+#         real1.append(np.real(frr))
+#         imag1.append(np.imag(frr))
+#
+#     realPeak[g]=real1
+#     imagPeak[g]=imag1
+#     real1 = []
+#     imag1 = []
+#
+# for w in range(11000):
+#     if w < 1000:
+#         data31.append(real1[w])
+#         data41.append(imag1[w])
+#     elif w >= 1000 and w < 2000:
+#         data32.append(real1[w])
+#         data42.append(imag1[w])
+#     elif w >= 2000 and w < 3000:
+#         data33.append(real1[w])
+#         data43.append(imag1[w])
+#     elif w >= 3000 and w < 4000:
+#         data34.append(real1[w])
+#         data44.append(imag1[w])
+#     elif w >= 4000 and w < 5000:
+#         data35.append(real1[w])
+#         data45.append(imag1[w])
+#     elif w >= 5000 and w < 6000:
+#         data36.append(real1[w])
+#         data46.append(imag1[w])
+#     elif w >= 6000 and w < 7000:
+#         data37.append(real1[w])
+#         data47.append(imag1[w])
+#     elif w >= 7000 and w < 8000:
+#         data38.append(real1[w])
+#         data48.append(imag1[w])
+#     elif w >= 8000 and w < 9000:
+#         data39.append(real1[w])
+#         data49.append(imag1[w])
+#     elif w >= 9000 and w < 10000:
+#         data310.append(real1[w])
+#         data410.append(imag1[w])
+#     elif w >= 10000:
+#         data311.append(real1[w])
+#         data411.append(imag1[w])
 
 data51 = []
 data52 = []
@@ -852,89 +848,29 @@ data69 = []
 data610 = []
 data611 = []
 
-for i,m in enumerate(data11):
-    data51.append(data11[i]/data31[i])
-    data61.append(data21[i]/data41[i])
-    data52.append(data12[i]/data32[i])
-    data62.append(data22[i]/data42[i])
-    data53.append(data13[i]/data33[i])
-    data63.append(data23[i]/data43[i])
-    data54.append(data14[i]/data34[i])
-    data64.append(data24[i]/data44[i])
-    data55.append(data15[i]/data35[i])
-    data65.append(data25[i]/data45[i])
-    data56.append(data16[i]/data36[i])
-    data66.append(data26[i]/data46[i])
-    data57.append(data17[i]/data38[i])
-    data67.append(data27[i]/data47[i])
-    data58.append(data18[i]/data38[i])
-    data68.append(data28[i]/data48[i])
-    data59.append(data19[i]/data39[i])
-    data69.append(data29[i]/data49[i])
-    data510.append(data110[i]/data310[i])
-    data610.append(data210[i]/data410[i])
-    data511.append(data111[i]/data311[i])
-    data611.append(data211[i]/data411[i])
-
-# for Q2s in q2range:
-#     sr = 4.7215 - .4794j
-#     scale = 0.1
-#     # si = sr
-#     # sf = sr
-#
-#     G = GII(sr,sr,Q2s)
-#     fr = f(Q2s)
-#     Ar1 = scale*fr/gval[0]**2
-#     Ar2 = scale*fr/gval[1]**2
-#     Ar3 = scale*fr/gval[2]**2
-#     Ar4 = scale*fr/gval[3]**2
-#     Ar5 = scale*fr/gval[4]**2
-#     Ar6 = scale*fr/gval[5]**2
-#     Ar7 = scale*fr/gval[6]**2
-#
-#     integral1 = integrate_on_contour(lambda z: MII(z,gval[0]),con)
-#     integral2 = integrate_on_contour(lambda z: MII(z,gval[1]),tour)
-#     integral3 = integrate_on_contour(lambda z: MII(z,gval[2]),loop)
-#     integral4 = integrate_on_contour(lambda z: MII(z,gval[3]),ct)
-#     integral5 = integrate_on_contour(lambda z: MII(z,gval[4]),lt)
-#     integral6 = integrate_on_contour(lambda z: MII(z,gval[5]),rval)
-#     integral7 = integrate_on_contour(lambda z: MII(z,gval[6]),C)
-#
-#     residue1 = integral1/(2*math.pi*1j)
-#     residue2 = integral2/(2*math.pi*1j)
-#     residue3 = integral3/(2*math.pi*1j)
-#     residue4 = integral4/(2*math.pi*1j)
-#     residue5 = integral5/(2*math.pi*1j)
-#     residue6 = integral6/(2*math.pi*1j)
-#     residue7 = integral7/(2*math.pi*1j)
-#
-#     frr1 = -residue1*(fr*G+Ar1)
-#     frr2 = -residue2*(fr*G+Ar2)
-#     frr3 = -residue3*(fr*G+Ar3)
-#     frr4 = -residue4*(fr*G+Ar4)
-#     frr5 = -residue5*(fr*G+Ar5)
-#     frr6 = -residue6*(fr*G+Ar6)
-#     frr7 = -residue7*(fr*G+Ar7)
-#
-#     data11.append(np.real(frr1))
-#     data12.append(np.real(frr2))
-#     data13.append(np.real(frr3))
-#     data14.append(np.real(frr4))
-#     data15.append(np.real(frr5))
-#     data16.append(np.real(frr6))
-#     data17.append(np.real(frr7))
-#
-#     data21.append(np.imag(frr1))
-#     data22.append(np.imag(frr2))
-#     data23.append(np.imag(frr3))
-#     data24.append(np.imag(frr4))
-#     data25.append(np.imag(frr5))
-#     data26.append(np.imag(frr6))
-#     data27.append(np.imag(frr7))
-
-
-
-
+# for i,m in enumerate(data11):
+#     data51.append(data11[i]/data31[i])
+#     data61.append(data21[i]/data41[i])
+#     data52.append(data12[i]/data32[i])
+#     data62.append(data22[i]/data42[i])
+#     data53.append(data13[i]/data33[i])
+#     data63.append(data23[i]/data43[i])
+#     data54.append(data14[i]/data34[i])
+#     data64.append(data24[i]/data44[i])
+#     data55.append(data15[i]/data35[i])
+#     data65.append(data25[i]/data45[i])
+#     data56.append(data16[i]/data36[i])
+#     data66.append(data26[i]/data46[i])
+#     data57.append(data17[i]/data38[i])
+#     data67.append(data27[i]/data47[i])
+#     data58.append(data18[i]/data38[i])
+#     data68.append(data28[i]/data48[i])
+#     data59.append(data19[i]/data39[i])
+#     data69.append(data29[i]/data49[i])
+#     data510.append(data110[i]/data310[i])
+#     data610.append(data210[i]/data410[i])
+#     data511.append(data111[i]/data311[i])
+#     data611.append(data211[i]/data411[i])
 
 
 mpl.rcParams['mathtext.rm'] = 'Yrsa'
@@ -973,7 +909,7 @@ mpl.rcParams['mathtext.bf'] = 'Yrsa:bold'
 # plt.plot(q2range,data12, color = 'springgreen',label = 'g = .5')
 # plt.plot(q2range,data13, color = 'lime',label = 'g = 1')
 # plt.plot(q2range,data14, color = 'limegreen',label = 'g = 1.5')
-# plt.plot(q2range,data15, color = 'forestgreen',label = 'g = 2')
+# plt.plot(q2range,realPole[2], color = 'forestgreen',label = 'g = 2')
 # plt.plot(q2range,data16, color = 'green',label = 'g = 2.5')
 # plt.plot(q2range,data17, color = 'darkgreen',label = 'g = 3')
 # plt.plot(q2range,data18, color = 'darkgreen',label = 'g = 3.5')
@@ -1046,17 +982,17 @@ mpl.rcParams['mathtext.bf'] = 'Yrsa:bold'
 # plt.ylabel(r'$Im[f_{R {\rightarrow} R}]$',fontname="Yrsa",size=10)
 # plt.show()
 
-plt.axhline(0, color = 'k')
-plt.axhline(0, color = 'k')
-plt.plot(q2range,data61, color = 'hotpink',label = 'g = .1')
-plt.plot(q2range,data62, color = 'deeppink',label = 'g = .5')
-plt.plot(q2range,data63, color = 'magenta',label = 'g = 1')
-plt.plot(q2range,data64, color = 'fuchsia',label = 'g = 1.5')
-plt.plot(q2range,data65, color = 'darkmagenta',label = 'g = 2')
-plt.plot(q2range,data66, color = 'red',label = 'g = 2.5')
-plt.plot(q2range,data67, color = 'lightcoral',label = 'g = 3')
-plt.plot(q2range,data68, color = 'crimson',label = 'g = 3.5')
-plt.plot(q2range,data69, color = 'darkred',label = 'g = 4')
+# plt.axhline(0, color = 'k')
+# plt.axhline(0, color = 'k')
+# plt.plot(q2range,data61, color = 'hotpink',label = 'g = .1')
+# plt.plot(q2range,data62, color = 'deeppink',label = 'g = .5')
+# plt.plot(q2range,data63, color = 'magenta',label = 'g = 1')
+# plt.plot(q2range,data64, color = 'fuchsia',label = 'g = 1.5')
+# plt.plot(q2range,data65, color = 'darkmagenta',label = 'g = 2')
+# plt.plot(q2range,data66, color = 'red',label = 'g = 2.5')
+# plt.plot(q2range,data67, color = 'lightcoral',label = 'g = 3')
+# plt.plot(q2range,data68, color = 'crimson',label = 'g = 3.5')
+# plt.plot(q2range,data69, color = 'darkred',label = 'g = 4')
 # plt.plot(q2range,data610, color = 'purple',label = 'g = 4.5')
 # plt.plot(q2range,data611, color = 'violet',label = 'g = 5')
 # plt.plot(q2range,data41, color = 'hotpink',label = 'g = .1')
@@ -1070,7 +1006,7 @@ plt.plot(q2range,data69, color = 'darkred',label = 'g = 4')
 # plt.plot(q2range,data49, color = 'darkred',label = 'g = 4')
 # plt.plot(q2range,data410, color = 'purple',label = 'g = 4.5')
 # plt.plot(q2range,data411, color = 'violet',label = 'g = 5')
-# plt.legend()
+plt.legend()
 plt.title(r'$f_{R {\rightarrow} R}$')
 plt.xlabel('$Q^2$')
 plt.ylabel(r'$Im[f_{R {\rightarrow} R}]$',fontname="Yrsa",size=10)
