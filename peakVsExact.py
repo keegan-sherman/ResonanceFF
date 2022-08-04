@@ -123,7 +123,7 @@ print(f"c: {c2Data}")
 
 #endregion
 
-# Get form factors from pole and peak
+# Get form factors from pole and peak and calculate ratio
 #region
 Q2Size = 500
 efSize = 1000
@@ -137,15 +137,17 @@ GexactData = np.zeros((Q2Size),dtype=complex)
 peak_sData = {}
 peak_indexData = {}
 # Mdata = np.zeros((efSize),dtype=complex)
-Mdata = {}
-for g in gRange:
-    Mdata[g] = np.array([abs(func.M(i,mass,mass,xi,mr,g)) for i in sfRange]) 
-
+Mdata = {
+    g: np.array([abs(func.M(i, mass, mass, xi, mr, g)) for i in sfRange])
+    for g in gRange
+}
 # Mdata = np.zeros((len(gRange),efSize),dtype=complex)
 
 FFexact = []
 FFpeak = []
 ratio = []
+error = []
+WidthMassRatio = []
 
 print(f"c2: {c2Data}")
 print(f"sr: {srData}")
@@ -172,7 +174,14 @@ for i,sr in enumerate(srData):
 
     FFexact = abs(c2Data[i]*(Adata+fdata*GexactData))
     FFpeak = abs(cgSq(g,mr,xi)*(Adata+fdata*GpeakData))
-    ratio.append(FFpeak/FFexact)
+    r = FFpeak/FFexact
+    ratio.append(r)
+    error.append(abs((r-1)*100))
+
+    er = csqrt(sr)
+    massr = er.real
+    widthr = 2*er.imag
+    WidthMassRatio.append(widthr/massr)
     # print(f"Exact: {FFexact}, Peak: {FFpeak}, ratio: {ratio[i]}")
 
 #endregion
@@ -195,10 +204,13 @@ for i,g in enumerate(gRange):
     # plot1_0.plot(Q2range,np.real(FFpeak),label="peak",linewidth=2)
 plot1_0.set_ylabel(r"$\left| f_{R\to R, peak}(Q^{2})/f_{R\to R, exact}(Q^{2}) \right|$",size=15)
 plot1_0.set_xlabel(r"$Q^{2}$",size=15)
+plot1_0.set_ylim(0.5,1.5)
 # plt.axvline(4.0,color='black')
 plt.xticks(fontname="Futura",fontsize=15)
 plt.yticks(fontname="Futura",fontsize=15)
 plt.legend(title="g",loc='upper right')
+
+# plt.savefig("ratioPlotLimit.svg",format='svg')
 
 # plot1 = fig1.add_subplot(2,1,2)
 # for i,g in enumerate(gRange):
@@ -245,9 +257,9 @@ labels = ax.get_xticklabels()
 ax.set_xticklabels(labels,position=(0,0.25))
 
 for g in gRange:
-    # plt.plot(sfRange1,data1[i],color=colors[g],alpha=0.25)
-    plt.plot(sfRange,Mdata[g],label="g="+str(g),color=colors[g])
-    plt.scatter(peak_sData[g],Mdata[g][peak_indexData[g]],color=colors[g])
+	    # plt.plot(sfRange1,data1[i],color=colors[g],alpha=0.25)
+	plt.plot(sfRange, Mdata[g], label=f"g={str(g)}", color=colors[g])
+	plt.scatter(peak_sData[g],Mdata[g][peak_indexData[g]],color=colors[g])
 
 font = font_manager.FontProperties(family="Futura",size=12)
 plt.legend(prop=font,loc='upper right')
@@ -271,6 +283,16 @@ ax.set_ylabel(r'Im(s) (GeV$^{2}$)', fontname="Futura", size=20)
 ax.set_xlabel(r'Re(s) (GeV$^{2}$)',fontname="Futura",size=20)
 ax.xaxis.set_label_coords(82.0/72.0,90.0/72.0)
 
+
+# fig4 = plt.figure(figsize=(15,9))
+
+# plot1_4 = fig4.add_subplot(1,1,1)
+# plot1_4.plot(WidthMassRatio,error)
+# plot1_4.set_ylabel(r"$\sigma$",size=15)
+# plot1_4.set_xlabel(r"$\Gamma/m_{r}$",size=15)
+# # plt.axvline(4.0,color='black')
+# plt.xticks(fontname="Futura",fontsize=15)
+# plt.yticks(fontname="Futura",fontsize=15)
 
 plt.show()
 
