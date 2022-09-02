@@ -10,6 +10,7 @@ import argparse as ap
 from scipy import optimize
 from scipy import integrate
 import matplotlib.font_manager as font_manager
+from matplotlib.widgets import Slider
 
 mass = 1
 mr = 2.2
@@ -101,18 +102,13 @@ for g in gRange:
             s = complex(s.real,s.imag)
             shift = min([0.01,s.imag/2])
             if s.imag < 0:
-                # r_real = s.real
-                # r_imag = s.imag
                 C1 = (s.real-shift) + 1j*(s.imag+shift)
                 C2 = (s.real+shift) + 1j*(s.imag+shift)
                 C3 = (s.real+shift) + 1j*(s.imag-shift)
                 C4 = (s.real-shift) + 1j*(s.imag-shift)
                 C5 = C1
                 C = [C1,C2,C3,C4,C5]
-                # C = [C5,C4,C3,C2,C1]
                 ci = contour_integrate(func.MII,C,(mass,mass,xi,mr,g))/(-2*math.pi*1j)
-                # if g == 3.0:
-                #     print(f"s: {s}, c: {ci}")
                 srData.append(s)
                 c2Data.append(-ci)
                 rootsq = []
@@ -136,27 +132,20 @@ GpeakData = np.zeros((Q2Size),dtype=complex)
 GexactData = np.zeros((Q2Size),dtype=complex)
 peak_sData = {}
 peak_indexData = {}
-# Mdata = np.zeros((efSize),dtype=complex)
 Mdata = {
     g: np.array([abs(func.M(i, mass, mass, xi, mr, g)) for i in sfRange])
     for g in gRange
 }
-# Mdata = np.zeros((len(gRange),efSize),dtype=complex)
 
 FFexact = []
 FFpeak = []
 ratio = []
-error = []
-WidthMassRatio = []
 
-print(f"c2: {c2Data}")
-print(f"sr: {srData}")
+error = {}
+WidthMassRatio = []
 
 for i,sr in enumerate(srData):
     g = gRange[i]
-    # for j,ef in enumerate(efRange):
-    #     sf = pow(ef,2)
-    #     Mdata[i][j] = func.M(sf,mass,mass,xi,mr,g)
 
     peak_index = Mdata[g].argmax()
     peak_indexData[g] = peak_index
@@ -167,7 +156,6 @@ for i,sr in enumerate(srData):
 
     for j,Q2 in enumerate(Q2range):
         realPeak,imagPeak = func.G0(peak_s,Q2,peak_s,mass,mass,0)
-        # realPeak,imagPeak = func.G0II(pow(mr,2),Q2,pow(mr,2),mass,mass,0)
         GpeakData[j] = complex(realPeak,imagPeak)
         realExact,imagExact = func.G0II(sr,Q2,sr,mass,mass,0)
         GexactData[j] = complex(realExact,imagExact)
@@ -176,13 +164,19 @@ for i,sr in enumerate(srData):
     FFpeak = abs(cgSq(g,mr,xi)*(Adata+fdata*GpeakData))
     r = FFpeak/FFexact
     ratio.append(r)
-    error.append(abs((r-1)*100))
+    # error.append(abs((r[0]-1)*100))
+
+    for k,tmp in enumerate(r):
+        if not k%5:
+            if k in error:
+                error[k].append(abs((tmp-1)*100))
+            else:
+                error[k] = [abs((tmp-1)*100)] 
 
     er = csqrt(sr)
-    massr = er.real
-    widthr = 2*er.imag
+    massr = er.real 
+    widthr = -2*er.imag
     WidthMassRatio.append(widthr/massr)
-    # print(f"Exact: {FFexact}, Peak: {FFpeak}, ratio: {ratio[i]}")
 
 #endregion
 
@@ -200,8 +194,6 @@ colors = {0.1:"pink", 0.5:"red", 1.0:"coral", 1.5:"orange", 2.0:"green", 2.5:"cy
 plot1_0 = fig1.add_subplot(1,1,1)
 for i,g in enumerate(gRange):
     plot1_0.plot(Q2range,ratio[i],label=str(g),linewidth=2,color=colors[g])
-    # plot1_0.plot(Q2range,np.real(FFexact),label="exact",linewidth=2)
-    # plot1_0.plot(Q2range,np.real(FFpeak),label="peak",linewidth=2)
 plot1_0.set_ylabel(r"$\left| f_{R\to R, peak}(Q^{2})/f_{R\to R, exact}(Q^{2}) \right|$",size=15)
 plot1_0.set_xlabel(r"$Q^{2}$",size=15)
 plot1_0.set_ylim(0.5,1.5)
@@ -210,37 +202,7 @@ plt.xticks(fontname="Futura",fontsize=15)
 plt.yticks(fontname="Futura",fontsize=15)
 plt.legend(title="g",loc='upper right')
 
-# plt.savefig("ratioPlotLimit.svg",format='svg')
-
-# plot1 = fig1.add_subplot(2,1,2)
-# for i,g in enumerate(gRange):
-#     plot1.plot(Q2range,np.imag(ratio[i]),label=str(g),linewidth=2)
-#     # plot1.plot(Q2range,np.imag(FFexact),label="exact",linewidth=2)
-#     # plot1.plot(Q2range,np.imag(FFpeak),label="peak",linewidth=2)
-# plot1.set_ylabel(r"$Im\left[ f_{R\to R, peak}(Q^{2})/f_{R\to R, exact}(Q^{2}) \right]$",size=15)
-# plot1.set_xlabel(r"Q^{2}",size=15)
-# plt.xticks(fontname="Futura",fontsize=15)
-# plt.yticks(fontname="Futura",fontsize=15)
-
-# plt.savefig("PeakVsExact_Sing.svg",format='svg')
-
-# fig2 = plt.figure(figsize=(15,9))
-
-# plot2_0 = fig2.add_subplot(1,1,1)
-# plot2_0.plot(Q2range,abs(GpeakData),label="G Peak",linewidth=2)
-# plot2_0.plot(Q2range,abs(GexactData),label="G Exact",linewidth=2)
-# plot2_0.plot(Q2range,Adata,label="A",linewidth=2)
-# plot2_0.set_xlabel(r"$Q^{2}$")
-# plt.xticks(fontname="Futura",fontsize=15)
-# plt.yticks(fontname="Futura",fontsize=15)
-# plt.legend(loc='upper right')
-
-# plot2_1 = fig2.add_subplot(2,1,2)
-# plot2_1.plot(Q2range,GpeakData.imag,label="Peak",linewidth=2)
-# plot2_1.plot(Q2range,GexactData.imag,label="Exact",linewidth=2)
-# plot2_1.set_xlabel(r"$Q^{2}$")
-# plt.xticks(fontname="Futura",fontsize=15)
-# plt.yticks(fontname="Futura",fontsize=15)
+# plt.savefig("ratioPlot_0P1-3P0.svg",format='svg')
 
 fig3 = plt.figure(figsize=(11,6.5))
 
@@ -257,7 +219,6 @@ labels = ax.get_xticklabels()
 ax.set_xticklabels(labels,position=(0,0.25))
 
 for g in gRange:
-	    # plt.plot(sfRange1,data1[i],color=colors[g],alpha=0.25)
 	plt.plot(sfRange, Mdata[g], label=f"g={str(g)}", color=colors[g])
 	plt.scatter(peak_sData[g],Mdata[g][peak_indexData[g]],color=colors[g])
 
@@ -283,16 +244,32 @@ ax.set_ylabel(r'Im(s) (GeV$^{2}$)', fontname="Futura", size=20)
 ax.set_xlabel(r'Re(s) (GeV$^{2}$)',fontname="Futura",size=20)
 ax.xaxis.set_label_coords(82.0/72.0,90.0/72.0)
 
+# plt.savefig("PeaksNPoles_0P1-3P0.svg",format='svg')
 
-# fig4 = plt.figure(figsize=(15,9))
+fig4 = plt.figure(figsize=(15,9))
 
-# plot1_4 = fig4.add_subplot(1,1,1)
-# plot1_4.plot(WidthMassRatio,error)
-# plot1_4.set_ylabel(r"$\sigma$",size=15)
-# plot1_4.set_xlabel(r"$\Gamma/m_{r}$",size=15)
-# # plt.axvline(4.0,color='black')
-# plt.xticks(fontname="Futura",fontsize=15)
-# plt.yticks(fontname="Futura",fontsize=15)
+plot1_4 = fig4.add_subplot(1,1,1)
+plt.subplots_adjust(left=0.15, bottom=0.15)
+pl1_4, = plot1_4.plot(WidthMassRatio,error[0])
+plot1_4.set_ylabel(r"$\sigma(\%)$",size=15)
+plot1_4.set_xlabel(r"$\Gamma/m_{r}$",size=15)
+plt.xticks(fontname="Futura",fontsize=15)
+plt.yticks(fontname="Futura",fontsize=15)
+
+axcolor = 'lightgoldenrodyellow'
+axQ2Val = plt.axes([0.15,0.05,0.75,0.03],facecolor=axcolor)
+
+sQ2Val = Slider(axQ2Val, r'$Q^{2}$', 0.0, Q2Size, valinit=0.0, valstep=5)
+
+def updateQ2(Q2Val):
+    Q2index = sQ2Val.val
+    pl1_4.set_ydata(error[Q2index])
+    plot1_4.set_ylim(0,max(error[Q2index])+0.05)
+    fig4.canvas.draw_idle()
+
+sQ2Val.on_changed(updateQ2)
+
+# plt.savefig("Error.svg",format='svg')
 
 plt.show()
 
