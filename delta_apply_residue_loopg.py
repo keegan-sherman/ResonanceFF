@@ -230,6 +230,78 @@ def imagF12(x,si,sf,Q2):
     fracf = numf/denf
     return np.imag(lead * fracf)
 
+#################################################
+
+def F1(x,si,sf,Q2):
+    sth = pow((m1+m2),2)
+    fpi = 4*cmath.pi
+    fpisq = pow(fpi,2)
+    lead = 1 / (fpisq*si)
+    numf = (Lplus(x,m1,m2,Q2,si,sf,eps)-Lminus(x,m1,m2,Q2,si,sf,eps))
+    denf = (yplus(x,m1,m2,Q2,si,sf,eps)-yminus(x,m1,m2,Q2,si,sf,eps))
+    fracf = numf/denf
+    return (lead * fracf)
+
+def F2(x,si,sf,Q2):
+    sth = pow((m1+m2),2)
+    fpi = 4*cmath.pi
+    fpisq = pow(fpi,2)
+    lead = 1 / (fpisq*si)
+    numf = (yplus(x,m1,m2,Q2,si,sf,eps)*Lplus(x,m1,m2,Q2,si,sf,eps)-yminus(x,m1,m2,Q2,si,sf,eps)*Lminus(x,m1,m2,Q2,si,sf,eps))
+    denf = (yplus(x,m1,m2,Q2,si,sf,eps)-yminus(x,m1,m2,Q2,si,sf,eps))
+    fracf = numf/denf
+    return (lead * fracf)
+
+def F3(x,si,sf,Q2):
+    sth = pow((m1+m2),2)
+    fpi = 4*cmath.pi
+    fpisq = pow(fpi,2)
+    lead = 1 / (fpisq*si)
+    numf = (yplus(x,m1,m2,Q2,si,sf,eps)**2*Lplus(x,m1,m2,Q2,si,sf,eps)-yminus(x,m1,m2,Q2,si,sf,eps)**2*Lminus(x,m1,m2,Q2,si,sf,eps))
+    denf = (yplus(x,m1,m2,Q2,si,sf,eps)-yminus(x,m1,m2,Q2,si,sf,eps))
+    fracf = numf/denf
+    return (lead * fracf)
+
+def F4(x,si,sf,Q2):
+    sth = pow((m1+m2),2)
+    fpi = 4*cmath.pi
+    fpisq = pow(fpi,2)
+    lead = 1 / (fpisq*si)
+    lead2 = (1-x)(yplus(x,m1,m2,Q2,si,sf,eps)+yminus(x,m1,m2,Q2,si,sf,eps))
+    numf = (yplus(x,m1,m2,Q2,si,sf,eps)**3*Lplus(x,m1,m2,Q2,si,sf,eps)-yminus(x,m1,m2,Q2,si,sf,eps)**3*Lminus(x,m1,m2,Q2,si,sf,eps))
+    denf = (yplus(x,m1,m2,Q2,si,sf,eps)-yminus(x,m1,m2,Q2,si,sf,eps))
+    fracf = numf/denf
+    return (lead * (lead2 +fracf))
+
+def loge(f):
+    return 1j*cmath.pi + np.log(np.abs(f))
+
+def logm(f):
+    return -1j*cmath.pi + np.log(np.abs(f))
+
+def F5(x,si,sf,Q2):
+    sth = pow((m1+m2),2)
+    fpi = 4*cmath.pi
+    fpisq = pow(fpi,2)
+    lead = -1 / (8*cmath.pi**2)
+    lead2 = (1-x - yminus(x,m1,m2,Q2,si,sf,eps))*loge(1-x - yminus(x,m1,m2,Q2,si,sf,eps))
+    lead3 = (1-x - yplus(x,m1,m2,Q2,si,sf,eps))*logm(1-x - yplus(x,m1,m2,Q2,si,sf,eps))
+    lead4 = yminus(x,m1,m2,Q2,si,sf,eps)*loge(-yminus(x,m1,m2,Q2,si,sf,eps))
+    lead5 = yplus(x,m1,m2,Q2,si,sf,eps)*logm(-yplus(x,m1,m2,Q2,si,sf,eps))
+    return (lead * (lead2 + lead3 + lead4 + lead5))
+
+def F6(x,si,sf,Q2):
+    sth = pow((m1+m2),2)
+    fpi = 4*cmath.pi
+    fpisq = pow(fpi,2)
+    lead = -1 / (fpisq)
+    lead2 = -(1-x)*(yminus(x,m1,m2,Q2,si,sf,eps) + yminus(x,m1,m2,Q2,si,sf,eps))
+    lead3 = ((1-x)**2 - yminus(x,m1,m2,Q2,si,sf,eps)**2)*loge(1-x - yminus(x,m1,m2,Q2,si,sf,eps))
+    lead4 = ((1-x)**2 - yplus(x,m1,m2,Q2,si,sf,eps)**2)*logm(1-x - yplus(x,m1,m2,Q2,si,sf,eps))
+    lead5 = yminus(x,m1,m2,Q2,si,sf,eps)**2*loge(-yminus(x,m1,m2,Q2,si,sf,eps))
+    lead6 = yplus(x,m1,m2,Q2,si,sf,eps)**2*logm(-yplus(x,m1,m2,Q2,si,sf,eps))
+    return (lead * (lead2 + lead3 + lead4 + lead5 +lead6))
+
 def quadraticSolution(a,b,c):
 	sqrtTerm = math.sqrt(pow(b,2)-4*a*c)
 	point1 = (-b-sqrtTerm)/(2*a)
@@ -310,6 +382,84 @@ def IaFi2(si,sf,Q2):
     # IaR,error = scipy.integrate.quad(imagF12,0,1,args=(si,sf,Q2),points=crit)
     IaR,error = scipy.integrate.quad(imagF12,0,1,args=(si,sf,Q2))
     return (IaR)
+
+################################################################## I preface
+
+def realF21x(x,si,sf,Q2):
+    return x**2 * np.real(F2(x,si,sf,Q2))
+
+def imagF21x(x,si,sf,Q2):
+    return x**2 * np.imag(F2(x,si,sf,Q2))
+
+def realF22x(x,si,sf,Q2):
+    return np.real(F3(x,si,sf,Q2))
+
+def imagF22x(x,si,sf,Q2):
+    return np.imag(F3(x,si,sf,Q2))
+
+def realF23x(x,si,sf,Q2):
+    return x * np.real(F2(x,si,sf,Q2))
+
+def imagF23x(x,si,sf,Q2):
+    return x * np.imag(F2(x,si,sf,Q2))
+
+def realF24x(x,si,sf,Q2):
+    return np.real(F5(x,si,sf,Q2))
+
+def imagF24x(x,si,sf,Q2):
+    return np.imag(F5(x,si,sf,Q2))
+
+
+################################################################## I ints
+
+def I21r(si,sf,Q2):
+    # crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    # IaR,error = scipy.integrate.quad(imagF12,0,1,args=(si,sf,Q2),points=crit)
+    IaR,error = scipy.integrate.quad(realF21x,0,1,args=(si,sf,Q2))
+    return (IaR)
+
+def I21i(si,sf,Q2):
+    # crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    # IaR,error = scipy.integrate.quad(imagF12,0,1,args=(si,sf,Q2),points=crit)
+    IaR,error = scipy.integrate.quad(imagF21x,0,1,args=(si,sf,Q2))
+    return (IaR)
+
+def I22r(si,sf,Q2):
+    # crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    # IaR,error = scipy.integrate.quad(imagF12,0,1,args=(si,sf,Q2),points=crit)
+    IaR,error = scipy.integrate.quad(realF22x,0,1,args=(si,sf,Q2))
+    return (IaR)
+
+def I22i(si,sf,Q2):
+    # crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    # IaR,error = scipy.integrate.quad(imagF12,0,1,args=(si,sf,Q2),points=crit)
+    IaR,error = scipy.integrate.quad(imagF22x,0,1,args=(si,sf,Q2))
+    return (IaR)
+
+def I23r(si,sf,Q2):
+    # crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    # IaR,error = scipy.integrate.quad(imagF12,0,1,args=(si,sf,Q2),points=crit)
+    IaR,error = scipy.integrate.quad(realF23x,0,1,args=(si,sf,Q2))
+    return (IaR)
+
+def I23i(si,sf,Q2):
+    # crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    # IaR,error = scipy.integrate.quad(imagF12,0,1,args=(si,sf,Q2),points=crit)
+    IaR,error = scipy.integrate.quad(imagF23x,0,1,args=(si,sf,Q2))
+    return (IaR)
+
+def I24r(si,sf,Q2):
+    # crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    # IaR,error = scipy.integrate.quad(imagF12,0,1,args=(si,sf,Q2),points=crit)
+    IaR,error = scipy.integrate.quad(realF24x,0,1,args=(si,sf,Q2))
+    return (IaR)
+
+def I24i(si,sf,Q2):
+    # crit = np.real(pf.crits(m1,m2,Q2,si,sf,0))
+    # IaR,error = scipy.integrate.quad(imagF12,0,1,args=(si,sf,Q2),points=crit)
+    IaR,error = scipy.integrate.quad(imagF24x,0,1,args=(si,sf,Q2))
+    return (IaR)
+
 
 #scalar G
 def GI(si,sf,Q2):
@@ -628,10 +778,13 @@ for gv in gval:
     coeff = [a,b,c,d]
     roots.append(np.roots(coeff)[1])
 
-# realPole = {}
-# imagPole = {}
-# absPole = {}
-#
+# print(roots)
+realPole = {}
+imagPole = {}
+absPole = {}
+
+#############################################################################
+
 # for i,g in enumerate(gval):
 #     lyst = listt[i]
 #     sr = roots[i]
@@ -643,7 +796,8 @@ for gv in gval:
 #         # sr = 4.7215 - .4794j
 #         scale = 0.1
 #
-#         G = GII(sr,sr,Q2s)
+#         G = GII(sr,sr,Q2s) ############
+#         # G = 2
 #         fr = f(Q2s)
 #         Ar = scale*fr/g**2
 #
@@ -659,9 +813,15 @@ for gv in gval:
 #     real = []
 #     imag = []
 #     abs = []
+
+##########################################################################
 #
-s_p = [4.839169169169169, 4.839169169169169, 4.839169169169169, 4.834174174174174, 4.819189189189189, 4.784224224224224, 4.719289289289289, 4.6093993993994, 4.404604604604605, 4.01, 4.01]
+# s_p = [4.839169169169169, 4.839169169169169, 4.839169169169169, 4.834174174174174, 4.819189189189189, 4.784224224224224, 4.719289289289289, 4.6093993993994, 4.404604604604605, 4.01, 4.01]
 #
+s_p = [4.836477117758401, 4.836477117758401, 4.836477117758401, 4.836477117758401, 4.818881945008071, 4.783787791795801, 4.722681640599557, 4.6093993993994, 4.404604604604605, 4.01, 4.01]
+
+
+#############################################################################
 # real1 = []
 # imag1 = []
 # abs1 = []
@@ -684,8 +844,10 @@ s_p = [4.839169169169169, 4.839169169169169, 4.839169169169169, 4.83417417417417
 #         # sr = 4.7215 - .4794j
 #         scale = 0.1
 #
-#         # G = GII(sp,sp,Q2s)
-#         G = GI(sp,sp,Q2s)
+#         G = GII(sp,sp,Q2s)
+#         # G = GI(sp,sp,Q2s) ###############
+#         # G = 2
+#         # IARTEST = I21r(si,sf,Q2)
 #         fr = f(Q2s)
 #         Ar = scale*fr/g**2
 #
@@ -733,92 +895,185 @@ s_p = [4.839169169169169, 4.839169169169169, 4.839169169169169, 4.83417417417417
 #     ir = []
 #     ar = []
 
+############################################
+
+### Here is a temp test of higher order integrals
+
+srangetest = np.linspace(0.1,8,1000)
+datarun21r = []
+datarun21i = []
+datarun22r = []
+datarun22i = []
+datarun23r = []
+datarun23i = []
+datarun24r = []
+datarun24i = []
+
+for sf in srangetest:
+    datarun21r.append(I21r(ei**2,sf,0))
+    datarun21i.append(I21i(ei**2,sf,0))
+    datarun22r.append(I22r(ei**2,sf,0))
+    datarun22i.append(I22i(ei**2,sf,0))
+    datarun23r.append(I23r(ei**2,sf,0))
+    datarun23i.append(I23i(ei**2,sf,0))
+    datarun24r.append(I24r(ei**2,sf,0))
+    datarun24i.append(I24i(ei**2,sf,0))
+
+###########
+
+f = plt.figure(1)
+plt.plot(srangetest,datarun21r)
+plt.title("F21r")
+# f.show()
+
+g = plt.figure(2)
+plt.plot(srangetest,datarun21i)
+plt.title("F21i")
+# g.show()
+
+h = plt.figure(3)
+plt.plot(srangetest,datarun22r)
+plt.title("F22r")
+# h.show()
+
+j = plt.figure(4)
+plt.plot(srangetest,datarun22i)
+plt.title("F22i")
+# j.show()
+
+k = plt.figure(5)
+plt.plot(srangetest,datarun23r)
+plt.title("F23r")
+# k.show()
+
+l = plt.figure(6)
+plt.plot(srangetest,datarun23i)
+plt.title("F23i")
+# l.show()
+
+m = plt.figure(7)
+plt.plot(srangetest,datarun24r)
+plt.title("F24r")
+# m.show()
+
+n = plt.figure(8)
+plt.plot(srangetest,datarun24i)
+plt.ylim(-0.001,0.001)
+plt.title("F24i")
+# n.show()
+
+# input()
+
+plt.show()
+
+
 # Here we begin looking at the error plots
+
+# absq = []
+# absPoleq20 = {}
+#
+# qval = 0
+#
+# print("*****************************************************************")
+#
+# for i,g in enumerate(gval):
+#     lyst = listt[i]
+#     sr = roots[i]
+#
+#     integral = integrate_on_contour(lambda z: MII(z,g),lyst)
+#     residue = integral/(2*math.pi*1j)
+#
+#     scale = 0.1
+#
+#     G = GII(sr,sr,qval)
+#     fr = f(qval)
+#     Ar = scale*fr/g**2
+#
+#     frr = (-residue*(fr*G+Ar))
+#     print(gval[i])
+#     print(np.abs(frr))
+#     print(residue)
+#     print("*****************************************************************")
+#
+#     absq.append(np.abs(frr))
+#
+#     absPoleq20[g] = absq
+#     absq = []
+#
+# absq1 = []
+# # print("*****************************************************************")
+# absPeakq20 ={}
+# ratioabsq20 = {}
+# for i,g in enumerate(gval):
+#     # lyst = listt[i]
+#     sp = s_p[i]
+#
+#     # integral = integrate_on_contour(lambda z: MII(z,g),lyst)
+#     # residue = integral/(2*math.pi*1j)
+#
+#     scale = 0.1
+#
+#     # G = GII(sp,sp,Q2s)
+#     G = GI(sp,sp,qval)
+#     fr = f(qval)
+#     Ar = scale*fr/g**2
+#
+#     c = 2*g*mr/(np.sqrt(3*xi))
+#
+#
+#     frr = (c**2*(fr*G+Ar))
+#     print(gval[i])
+#     print(np.abs(frr))
+#     # print(residue)
+#     print("*****************************************************************")
+#
+#     absq1.append(np.abs(frr))
+#
+#     absPeakq20[g]=absq1
+#     absq1=[]
+#
+# arq = []
+#
+# print("*****************************************************************")
+# for i,g in enumerate(gval):
+#     arq.append((absPeakq20[g][0])/(absPoleq20[g][0]))
+#     ratioabsq20[g]=arq
+#     arq = []
+#
+# dw=[]
+# sigma=[]
+# for i in range(7):
+#     dw.append(-2*np.imag(csqrt(roots[i]))/np.real(csqrt(roots[i])))
+#
+# gval2 = [0.1,.5,1,1.5,2,2.5,3]
+#
+# for i,g in enumerate(gval2):
+#     sigma.append(np.abs((ratioabsq20[g][0]-1)*100))
+#
+# print(ratioabsq20[.1][0])
+# print(ratioabsq20[.5][0])
+# print(ratioabsq20[1][0])
+# print(ratioabsq20[1.5][0])
+# print(ratioabsq20[2][0])
+# print(ratioabsq20[2.5][0])
+# print(ratioabsq20[3][0])
 #
 #
 #
-absq = []
-absPoleq20 = {}
-
-qval = 0
-
-for i,g in enumerate(gval):
-    lyst = listt[i]
-    sr = roots[i]
-
-    integral = integrate_on_contour(lambda z: MII(z,g),lyst)
-    residue = integral/(2*math.pi*1j)
-
-    scale = 0.1
-
-    G = GII(sr,sr,qval)
-    fr = f(qval)
-    Ar = scale*fr/g**2
-
-    frr = (-residue*(fr*G+Ar))
-
-    absq.append(np.abs(frr))
-
-    absPoleq20[g] = absq
-    absq = []
-
-absq1 = []
-
-absPeakq20 ={}
-ratioabsq20 = {}
-for i,g in enumerate(gval):
-    lyst = listt[i]
-    sp = s_p[i]
-
-    # integral = integrate_on_contour(lambda z: MII(z,g),lyst)
-    # residue = integral/(2*math.pi*1j)
-
-    scale = 0.1
-
-    # G = GII(sp,sp,Q2s)
-    G = GI(sp,sp,qval)
-    fr = f(qval)
-    Ar = scale*fr/g**2
-
-    c = 2*g*mr/(np.sqrt(3*xi))
-
-
-    frr = (c**2*(fr*G+Ar))
-
-    absq1.append(np.abs(frr))
-
-    absPeakq20[g]=absq1
-    absq1=[]
-
-arq = []
-
-for i,g in enumerate(gval):
-    arq.append((absPeakq20[g][0])/(absPoleq20[g][0]))
-    ratioabsq20[g]=arq
-    arq = []
-
-dw=[]
-sigma=[]
-for i in range(7):
-    dw.append(-2*np.imag(csqrt(roots[i]))/np.real(csqrt(roots[i])))
-
-gval2 = [0.1,.5,1,1.5,2,2.5,3]
-
-for i,g in enumerate(gval2):
-    sigma.append(np.abs((ratioabsq20[g][0]-1)*100))
-
-
-
-print(dw)
-# print(absPoleq20[2][0])
-print(sigma)
+# print(dw)
+# # print(absPoleq20[2][0])
+# print(sigma)
 
 mpl.rcParams['mathtext.rm'] = 'Yrsa'
 mpl.rcParams['mathtext.it'] = 'Yrsa:italic'
 mpl.rcParams['mathtext.bf'] = 'Yrsa:bold'
 
-plt.plot(dw,sigma, color = 'darkgreen',label = 'g = .1')
+# plt.plot(srangetest,datarun)
 
+#error plost
+# plt.plot(dw,sigma, color = 'darkgreen',label = 'g = .1')
+
+#ration plots
 # plt.plot(q2range,ratioabs[.1], color = 'red',label = 'g = .1')
 # plt.plot(q2range,ratioabs[.5], color = 'orange',label = 'g = .5')
 # plt.plot(q2range,ratioabs[1], color = 'yellow',label = 'g = 1')
@@ -826,12 +1081,28 @@ plt.plot(dw,sigma, color = 'darkgreen',label = 'g = .1')
 # plt.plot(q2range,ratioabs[2], color = 'darkgreen',label = 'g = 2')
 # plt.plot(q2range,ratioabs[2.5], color = 'cyan',label = 'g = 2.5')
 # plt.plot(q2range,ratioabs[3], color = 'blue',label = 'g = 3')
+
+#formatting
 # plt.axhline(0, color = 'k')
 # plt.legend()
-# plt.title(r'$Ratio Peak over Pole as a function of Q^2$')
+# plt.title("Ratio Peak over Pole as a function of Virtuality")
 # plt.xlabel('$Q^2$')
 # plt.ylabel(r'$|f_{R {\rightarrow} R, {peak}}/f_{R {\rightarrow} R, {pole}}|$',fontname="Yrsa",size=10)
-plt.title("Sigma plots")
-plt.xlabel(r'$\Gamma_R/m_r$')
-plt.ylabel(r'$\sigma (\%)$',fontname="Yrsa",size=10)
-plt.show()
+# plt.title("Sigma plots")
+# plt.xlabel(r'$\Gamma_R/m_r$')
+# plt.ylabel(r'$\sigma (\%)$',fontname="Yrsa",size=10)
+# plt.show()
+
+# plt.plot(q2range,realPeak[.1], color = 'red',label = 'g = .1')
+# plt.plot(q2range,realPeak[.5], color = 'orange',label = 'g = .5')
+# plt.plot(q2range,realPeak[1], color = 'yellow',label = 'g = 1')
+# plt.plot(q2range,realPeak[1.5], color = 'lawngreen',label = 'g = 1.5')
+# plt.plot(q2range,realPeak[2], color = 'darkgreen',label = 'g = 2')
+# plt.plot(q2range,realPeak[2.5], color = 'cyan',label = 'g = 2.5')
+# plt.plot(q2range,realPeak[3], color = 'blue',label = 'g = 3')
+# plt.axhline(0, color = 'k')
+# plt.legend()
+# plt.title(r'$f_{R {\rightarrow} R, {peak}}$ as a function of virtuality')
+# plt.xlabel('$Q^2$')
+# plt.ylabel(r'$Re[f_{R {\rightarrow} R, {peak}}]$',fontname="Yrsa",size=10)
+# plt.show()
