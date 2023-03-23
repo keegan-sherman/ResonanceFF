@@ -65,6 +65,7 @@ c2Data = []
 qrRange = np.linspace(-3,3,20)
 qiRange = np.linspace(0,3,10)
 
+# gRange = [0.1]
 gRange = [0.1,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0]
 
 for g in gRange:
@@ -72,7 +73,6 @@ for g in gRange:
         for qi in qiRange:
             try:
                 root = optimize.newton(denum,complex(qr,qi),denumDeriv)
-                root = complex(root.real,root.imag)
                 if root not in rootsq:
                     rootsq.append(root)
             except RuntimeError:
@@ -96,7 +96,7 @@ for g in gRange:
             # C = [C5,C4,C3,C2,C1]
             ci = contour_integrate(func.MII,C,(mass,mass,xi,mr,g))/(-2*math.pi*1j)
             # if g == 3.0:
-            #     print(f"s: {s}, c: {ci}")
+            print(f"s: {s}, c2: {-ci}, c: {cmath.sqrt(-ci)}")
             srData.append(s)
             c2Data.append(-ci)
             rootsq = []
@@ -180,52 +180,52 @@ plt.yticks(fontname="Futura",fontsize=15)
 
 # plt.savefig("ResFF.svg",format='svg')
 
-fig2 = plt.figure(figsize=(15,9))
+# fig2 = plt.figure(figsize=(15,9))
 
-plot0g = fig2.add_subplot(2,1,1)
-plot0g.plot(Q2range,termOneReal,label=r'$Re[c^{2}A_{22}]$')
-plot0g.plot(Q2range,termTwoReal,label=r'$Re[c^{2}fG^{II,II}]$')
-# plot0g.set_ylabel(r'$Re\left(f_{R\to R}(0)\right)$',size=15)
-plt.xticks(fontname="Futura",fontsize=15)
-plt.yticks(fontname="Futura",fontsize=15)
-plt.legend()
+# plot0g = fig2.add_subplot(2,1,1)
+# plot0g.plot(Q2range,termOneReal,label=r'$Re[c^{2}A_{22}]$')
+# plot0g.plot(Q2range,termTwoReal,label=r'$Re[c^{2}fG^{II,II}]$')
+# # plot0g.set_ylabel(r'$Re\left(f_{R\to R}(0)\right)$',size=15)
+# plt.xticks(fontname="Futura",fontsize=15)
+# plt.yticks(fontname="Futura",fontsize=15)
+# plt.legend()
 
-plot1g = fig2.add_subplot(2,1,2)
-plot1g.plot(Q2range,termOneImag,label=r'$Im[c^{2}A_{22}]$')
-plot1g.plot(Q2range,termTwoImag,label=r'$Im[c^{2}fG^{II,II}]$')
-# plot1g.set_ylabel(r'$Im\left(f_{R\to R}(0)\right)$',size=15)
-plot1g.set_xlabel(r'$Q^{2}$',size=15)
-plt.xticks(fontname="Futura",fontsize=15)
-plt.yticks(fontname="Futura",fontsize=15)
-plt.legend()
+# plot1g = fig2.add_subplot(2,1,2)
+# plot1g.plot(Q2range,termOneImag,label=r'$Im[c^{2}A_{22}]$')
+# plot1g.plot(Q2range,termTwoImag,label=r'$Im[c^{2}fG^{II,II}]$')
+# # plot1g.set_ylabel(r'$Im\left(f_{R\to R}(0)\right)$',size=15)
+# plot1g.set_xlabel(r'$Q^{2}$',size=15)
+# plt.xticks(fontname="Futura",fontsize=15)
+# plt.yticks(fontname="Futura",fontsize=15)
+# plt.legend()
 
 # plt.savefig("ResFF.svg",format='svg')
 
-fig3 = plt.figure(figsize=(15,9))
+# fig3 = plt.figure(figsize=(15,9))
 
-plot0G = fig3.add_subplot(1,1,1)
-plot0G.plot(Q2range,Greal,label=r'$Re[G]$')
-plot0G.plot(Q2range,Gimag,label=r'$Im[G]$')
-plot0G.plot(Q2range,GrealII,label=r'$Re[G^{II,II}]$')
-plot0G.plot(Q2range,GimagII,label=r'$Im[G^{II,II}]$')
-plot0G.set_xlabel(r'$Q^{2}$',size=15)
-plt.title(r'$c^{2}=$'+str(c2Data[6]),size=15)
-plt.xticks(fontname="Futura",fontsize=15)
-plt.yticks(fontname="Futura",fontsize=15)
-plt.legend()
+# plot0G = fig3.add_subplot(1,1,1)
+# plot0G.plot(Q2range,Greal,label=r'$Re[G]$')
+# plot0G.plot(Q2range,Gimag,label=r'$Im[G]$')
+# plot0G.plot(Q2range,GrealII,label=r'$Re[G^{II,II}]$')
+# plot0G.plot(Q2range,GimagII,label=r'$Im[G^{II,II}]$')
+# plot0G.set_xlabel(r'$Q^{2}$',size=15)
+# plt.title(r'$c^{2}=$'+str(c2Data[6]),size=15)
+# plt.xticks(fontname="Futura",fontsize=15)
+# plt.yticks(fontname="Futura",fontsize=15)
+# plt.legend()
 
 # plt.savefig("G.svg",format='svg')
 
-fig4 = plt.figure(figsize=(15,9))
+# fig4 = plt.figure(figsize=(15,9))
 
-plot0comp = fig4.add_subplot(1,1,1)
-plot0comp.plot(Q2range,ad,label=r'$|Re[c^{2}]*Im[G^{II,II}]|$')
-plot0comp.plot(Q2range,bc,label=r'$|Im[c^{2}]*Re[G^{II,II}]|$')
-plot0comp.set_xlabel(r'$Q^{2}$',size=15)
-plt.xticks(fontname="Futura",fontsize=15)
-plt.yticks(fontname="Futura",fontsize=15)
-plt.legend()
+# plot0comp = fig4.add_subplot(1,1,1)
+# plot0comp.plot(Q2range,ad,label=r'$|Re[c^{2}]*Im[G^{II,II}]|$')
+# plot0comp.plot(Q2range,bc,label=r'$|Im[c^{2}]*Re[G^{II,II}]|$')
+# plot0comp.set_xlabel(r'$Q^{2}$',size=15)
+# plt.xticks(fontname="Futura",fontsize=15)
+# plt.yticks(fontname="Futura",fontsize=15)
+# plt.legend()
 
 # plt.savefig("comp.svg",format='svg')
 
-plt.show()
+# plt.show()

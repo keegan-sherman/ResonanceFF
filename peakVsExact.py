@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import math
 import cmath
+import sys
 import argparse as ap
 from scipy import optimize
 from scipy import integrate
@@ -21,6 +22,7 @@ sth = pow(2*mass,2)
 parser = ap.ArgumentParser()
 parser.add_argument('-g',nargs='+',default=[0.1],type=float)
 parser.add_argument('-s',default='none',type=str)
+parser.add_argument('-p',action='store_true')
 
 args = vars(parser.parse_args())
 
@@ -50,16 +52,24 @@ def denum(q):
 	termTwoDenum = 8*cmath.pi*energy(q)
 	return complex((termOneNumer/termOneDenum),-(termTwoNumer/termTwoDenum))
 
+# def denumDeriv(q):
+# 	global mass,mr,xi,g
+# 	tmp = ((q/csqrt(pow(q,2)+pow(mass,2))) + (q/csqrt(pow(q,2)+pow(mass,2))))
+# 	termOneNumer = q*tmp
+# 	termOneDenum = 8*cmath.pi*pow(energy(q),2)
+# 	termTwoNumer = 1
+# 	termTwoDenum = 8*cmath.pi*energy(q)
+# 	termThreeNumer = 3*tmp*energy(q)
+# 	termThreeDenum = 2*pow(g,2)*pow(mr,2)
+# 	return complex(-(termThreeNumer/termThreeDenum),(termOneNumer/termOneDenum)-(termTwoNumer/termTwoDenum))
+
 def denumDeriv(q):
-	global mass,mr,xi,g
-	tmp = ((q/csqrt(pow(q,2)+pow(mass,2))) + (q/csqrt(pow(q,2)+pow(mass,2))))
-	termOneNumer = q*tmp
-	termOneDenum = 8*cmath.pi*pow(energy(q),2)
-	termTwoNumer = 1
-	termTwoDenum = 8*cmath.pi*energy(q)
-	termThreeNumer = 3*tmp*energy(q)
-	termThreeDenum = 2*pow(g,2)*pow(mr,2)
-	return complex(-(termThreeNumer/termThreeDenum),(termOneNumer/termOneDenum)-(termTwoNumer/termTwoDenum))
+    global mass,mr,xi,g
+    tmp = csqrt(pow(q,2)+pow(mass,2))
+    termOne = (-6*xi*q)/(pow(g,2)*pow(mr,2))
+    termTwo = (xi*pow(q,2))/(16*cmath.pi*pow(tmp,3))
+    termThree = (-xi)/(16*cmath.pi*tmp)
+    return complex(termOne,(termTwo+termThree))
 
 def contour_integrate(func,path,args=()):
     result=0.0
@@ -86,16 +96,16 @@ srData = []
 c2Data = []
 
 qrRange = np.linspace(-4.5,4.5,20)
-qiRange = np.linspace(0,3,10)
+qiRange = np.linspace(0,-3.0,10)
 for g in gRange:
     for qr in qrRange:
-            for qi in qiRange:
-                try:
-                    root = optimize.newton(denum,complex(qr,qi),denumDeriv)
-                    if root not in rootsq:
-                        rootsq.append(root)
-                except RuntimeError:
-                    continue
+        for qi in qiRange:
+            try:
+                root = optimize.newton(denum,complex(qr,qi),fprime=denumDeriv)
+                if root not in rootsq:
+                    rootsq.append(root)
+            except (RuntimeError, OverflowError):
+                continue
 
     for r in rootsq:
             s = pow(energy(r),2)
@@ -114,6 +124,14 @@ for g in gRange:
                 rootsq = []
                 break
 
+
+if args['p']:
+    print("sr: c^2")
+    for i,j in enumerate(srData):
+        print(f"{j}, {(np.angle(j)*180/math.pi)+360}: {c2Data[i]}")
+    sys.exit(0)
+    
+
 print(f"sr: {srData}")
 print(f"c: {c2Data}")
 
@@ -121,15 +139,17 @@ print(f"c: {c2Data}")
 
 # Get form factors from pole and peak and calculate ratio
 #region
-Q2Size = 500
+Q2start = 0
+Q2end = 4.5
+Q2size = 500
+Q2step = (Q2end-Q2start)/Q2size
 efSize = 1000
-Q2range = np.linspace(0,4.5,Q2Size)
+Q2range = np.linspace(Q2start,Q2end,Q2size)
 efRange = np.linspace(1.0,3.0,efSize)
 sfRange = np.power(efRange,2)
-Adata = np.array([func.F(mr,Q2,g,0.1) for Q2 in Q2range])
 fdata = np.array([func.f(mr,Q2) for Q2 in Q2range])
-GpeakData = np.zeros((Q2Size),dtype=complex)
-GexactData = np.zeros((Q2Size),dtype=complex)
+GpeakData = np.zeros((Q2size),dtype=complex)
+GexactData = np.zeros((Q2size),dtype=complex)
 peak_sData = {}
 peak_indexData = {}
 Mdata = {
@@ -154,6 +174,7 @@ for i,sr in enumerate(srData):
     peak_sData[g] = peak_s
     print(f"g:{g}, peak:{peak_s}")
 
+    Adata = np.array([func.F(mr,Q2,g,0.1) for Q2 in Q2range])
     for j,Q2 in enumerate(Q2range):
         realPeak,imagPeak = func.G0(peak_s,Q2,peak_s,mass,mass,0)
         GpeakData[j] = complex(realPeak,imagPeak)
@@ -162,11 +183,18 @@ for i,sr in enumerate(srData):
 
     FFexact = abs(c2Data[i]*(Adata+fdata*GexactData))
     FFpeak = abs(cgSq(g,mr,xi)*(Adata+fdata*GpeakData))
+    # print(f"A: {Adata[0]}")
+    # print(f"f: {fdata[0]}")
+    # print(f"G peak: {GpeakData[0]}, exact: {GexactData[0]}")
+    # print(f"FF peak: {FFpeak[0]}, exact: {FFexact[0]}")
+    # print()
     r = FFpeak/FFexact
     ratio.append(r)
     # error.append(abs((r[0]-1)*100))
 
     for k,tmp in enumerate(r):
+        # if k == 0:
+        #     print(f"r: {tmp}")
         if not k%5:
             if k in error:
                 error[k].append(abs((tmp-1)*100))
@@ -193,16 +221,17 @@ colors = {0.1:"pink", 0.5:"red", 1.0:"coral", 1.5:"orange", 2.0:"green", 2.5:"cy
 
 plot1_0 = fig1.add_subplot(1,1,1)
 for i,g in enumerate(gRange):
-    plot1_0.plot(Q2range,ratio[i],label=str(g),linewidth=2,color=colors[g])
-plot1_0.set_ylabel(r"$\left| f_{R\to R, peak}(Q^{2})/f_{R\to R, exact}(Q^{2}) \right|$",size=15)
-plot1_0.set_xlabel(r"$Q^{2}$",size=15)
-plot1_0.set_ylim(0.5,1.5)
+    plot1_0.plot(Q2range,ratio[i],label=str(g),linewidth=3,color=colors[g])
+plot1_0.set_ylabel(r"$\left| f_{R\to R, peak}(Q^{2})/f_{R\to R, exact}(Q^{2}) \right|$",size=20)
+plot1_0.set_xlabel(r"$Q^{2}$",size=20)
+plot1_0.set_ylim(0.8,1.5)
+ratioLine = plot1_0.axvline(0.0,color='black')
 # plt.axvline(4.0,color='black')
-plt.xticks(fontname="Futura",fontsize=15)
-plt.yticks(fontname="Futura",fontsize=15)
-plt.legend(title="g",loc='upper right')
+plt.xticks(fontname="Futura",fontsize=20)
+plt.yticks(fontname="Futura",fontsize=20)
+plt.legend(title="g",loc='upper right',title_fontsize=20,fontsize=15)
 
-# plt.savefig("ratioPlot_0P1-3P0.svg",format='svg')
+plt.savefig("ratioPlot_Notes1.svg",format='svg')
 
 fig3 = plt.figure(figsize=(11,6.5))
 
@@ -213,14 +242,16 @@ plt.yticks(fontname="Futura",fontsize=15)
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 plt.xlim(2.0, 9.0)
-plt.ylim(-7,400)
+plt.ylim(-7,300)
 plt.axvline(x=sth, color='black')
 labels = ax.get_xticklabels()
 ax.set_xticklabels(labels,position=(0,0.25))
 
 for g in gRange:
 	plt.plot(sfRange, Mdata[g], label=f"g={str(g)}", color=colors[g])
-	plt.scatter(peak_sData[g],Mdata[g][peak_indexData[g]],color=colors[g])
+	# plt.scatter(peak_sData[g],Mdata[g][peak_indexData[g]],color=colors[g])
+
+# plt.savefig("M3.svg",format='svg')
 
 font = font_manager.FontProperties(family="Futura",size=12)
 plt.legend(prop=font,loc='upper right')
@@ -240,36 +271,42 @@ for i,g in enumerate(gRange):
 plt.xlim(2.0, 9.0)
 plt.ylim(-1.0, 0.03)
 
-ax.set_ylabel(r'Im(s) (GeV$^{2}$)', fontname="Futura", size=20)
-ax.set_xlabel(r'Re(s) (GeV$^{2}$)',fontname="Futura",size=20)
+ax.set_ylabel(r'Im($E_{cm}^{2}$) (GeV$^{2}$)', fontname="Futura", size=20)
+ax.set_xlabel(r'Re($E_{cm}^{2}$) (GeV$^{2}$)',fontname="Futura",size=20)
 ax.xaxis.set_label_coords(82.0/72.0,90.0/72.0)
 
+# plt.savefig("PoleTalk_1.svg",format='svg')
 # plt.savefig("PeaksNPoles_0P1-3P0.svg",format='svg')
 
 fig4 = plt.figure(figsize=(15,9))
 
 plot1_4 = fig4.add_subplot(1,1,1)
 plt.subplots_adjust(left=0.15, bottom=0.15)
-pl1_4, = plot1_4.plot(WidthMassRatio,error[0])
-plot1_4.set_ylabel(r"$\sigma(\%)$",size=15)
-plot1_4.set_xlabel(r"$\Gamma/m_{r}$",size=15)
-plt.xticks(fontname="Futura",fontsize=15)
-plt.yticks(fontname="Futura",fontsize=15)
+pl1_4, = plot1_4.plot(WidthMassRatio,error[0],linewidth=3)
+plot1_4.set_ylabel(r"$\sigma(\%)$",size=20)
+plot1_4.set_xlabel(r"$\Gamma/m_{r}$",size=20)
+plt.xticks(fontname="Futura",fontsize=20)
+plt.yticks(fontname="Futura",fontsize=20)
+plot1_4.set_title(r"$Q^{2}=0$",fontsize=20)
 
-axcolor = 'lightgoldenrodyellow'
-axQ2Val = plt.axes([0.15,0.05,0.75,0.03],facecolor=axcolor)
+# axcolor = 'lightgoldenrodyellow'
+# axQ2Val = plt.axes([0.15,0.05,0.75,0.03],facecolor=axcolor)
 
-sQ2Val = Slider(axQ2Val, r'$Q^{2}$', 0.0, Q2Size, valinit=0.0, valstep=5)
+# sQ2Val = Slider(axQ2Val, r'$Q^{2}$', 0.0, Q2size, valinit=0.0, valstep=5)
 
-def updateQ2(Q2Val):
-    Q2index = sQ2Val.val
-    pl1_4.set_ydata(error[Q2index])
-    plot1_4.set_ylim(0,max(error[Q2index])+0.05)
-    fig4.canvas.draw_idle()
+# def updateQ2(Q2Val):
+#     Q2index = sQ2Val.val
+#     pl1_4.set_ydata(error[Q2index])
+#     plot1_4.set_ylim(0,max(error[Q2index])+0.05)
+#     plot1_4.set_title(r"$Q^{2}=$"+str(Q2index*Q2step))
+#     # plot1_0.axvline(Q2index*Q2step,color='black')
+#     ratioLine.set_xdata(Q2index*Q2step)
+#     fig4.canvas.draw_idle()
+#     fig1.canvas.draw_idle()
 
-sQ2Val.on_changed(updateQ2)
+# sQ2Val.on_changed(updateQ2)
 
-# plt.savefig("Error.svg",format='svg')
+# plt.savefig("ErrorNotes.svg",format='svg')
 
 plt.show()
 

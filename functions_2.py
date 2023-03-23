@@ -33,16 +33,25 @@ def qStar(s,m1,m2):
 	termTwo = pow(pow(m2,2) - pow(m1,2),2)/s
 	return 0.5*csqrt(s - termOne + termTwo)
 
-def gamma(s,m1,m2,mr,g):
+def gammaS(s,m1,m2,mr,g):
 	if s == 0+0j:
 		return np.inf
 	amp = pow(g,2)/( 6.0 * math.pi )
 	return amp * pow(mr,2) * (qStar(s,m1,m2)) / s
 
-def tanBW_func(s,m1,m2,mr,g):
+def gammaP(s,m1,m2,g):
+	if s == 0+0j:
+		return np.inf
+	amp = pow(g,2)/( 6.0 * math.pi )
+	return amp * pow(qStar(s,m1,m2),3)/s
+
+def tanBW_func(s,m1,m2,mr,g,l):
 	denum = pow(mr,2)-s
-	tanBW = csqrt(s)*gamma(s,m1,m2,mr,g) / denum
-	return tanBW
+	if l == 0:
+		Gamma = gammaS(s,m1,m2,mr,g)
+	elif l == 1:
+		Gamma = gammaP(s,m1,m2,g)
+	return csqrt(s)*Gamma / denum
 
 def rho(s,m1,m2,xi):
 	numer = xi*qStar(s,m1,m2)
@@ -54,16 +63,16 @@ def rho(s,m1,m2,xi):
 def f(mr, Q2):
 	return pow(mr,2)/(pow(mr,2)+Q2)
 
-def K(s,m1,m2,xi,mr,g):
-	numer = 8*math.pi*csqrt(s)*tanBW_func(s,m1,m2,mr,g)
+def K(s,m1,m2,xi,mr,g,l):
+	numer = 8*math.pi*csqrt(s)*tanBW_func(s,m1,m2,mr,g,l)
 	denum = xi*qStar(s,m1,m2)
 	return numer/denum
 
-def M(s,m1,m2,xi,mr,g):
+def M(s,m1,m2,xi,mr,g,l=0):
 	if s == 0+0j:
 		return np.inf
 	# print("s: " + str(s))
-	kInverse = 1/K(s,m1,m2,xi,mr,g)
+	kInverse = 1/K(s,m1,m2,xi,mr,g,l)
 	denum = kInverse - (1j)*rho(s,m1,m2,xi)
 	# print("denum: " + str(denum))
 	return 1/denum
@@ -74,9 +83,9 @@ def Mere(s,m1,m2,xi,a,r):
 	p = rho(s,m1,m2,xi)
 	return K / ( 1.0 - 1j * p * K )
 
-def MII(s,m1,m2,xi,mr,g):
+def MII(s,m1,m2,xi,mr,g,l=0):
 	# print("s: " + str(s))
-	kInverse = 1/K(s,m1,m2,xi,mr,g)
+	kInverse = 1/K(s,m1,m2,xi,mr,g,l)
 	denum = kInverse + (1j)*rho(s,m1,m2,xi)
 	# print("denum: " + str(denum))
 	return 1/denum
@@ -177,6 +186,14 @@ def imagIntegrandG11(x,m1,m2,Q2,si,sf,epsilon):
 	F1 = imagIntegrandG0(x,m1,m2,Q2,si,sf,epsilon)
 	return x*F1
 
+def realIntegrandG21(x,m1,m2,Q2,si,sf,epsilon):
+	F1 = realIntegrandG0(x,m1,m2,Q2,si,sf,epsilon)
+	return pow(x,2)*F1
+
+def imagIntegrandG21(x,m1,m2,Q2,si,sf,epsilon):
+	F1 = imagIntegrandG0(x,m1,m2,Q2,si,sf,epsilon)
+	return pow(x,2)*F1
+
 def realIntegrandG12(x,m1,m2,Q2,si,sf,epsilon):
 	coefficient = 1/(pow(4*math.pi,2)*si)
 	yp = yplus(x,m1,m2,Q2,si,sf,epsilon)
@@ -264,6 +281,8 @@ def G12(si,Q2,sf,m1,m2,epsilon):
 	real = integrate.quad(realIntegrandG12,0,1,args=(m1,m2,Q2,si,sf,epsilon),points=critical)[0]
 	imag = integrate.quad(imagIntegrandG12,0,1,args=(m1,m2,Q2,si,sf,epsilon),points=critical)[0]
 	return real, imag
+
+def G21(si,Q2)
 
 def Gvector(Pi,Pf,m1,m2,epsilon):
 	si = dot(Pi,Pi)

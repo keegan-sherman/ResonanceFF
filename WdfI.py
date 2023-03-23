@@ -3,6 +3,7 @@
 # from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from sympy import python
 import functions_2 as func
 import numpy as np
 import math
@@ -20,7 +21,7 @@ parser.add_argument('-m1',default='unit',type=str)
 parser.add_argument('-m2',default='unit',type=str)
 parser.add_argument('-mr',default='test',type=str)
 parser.add_argument('-ei',default='1.05',type=str)
-parser.add_argument('-g',default=3.0,type=float)
+parser.add_argument('-g',nargs='+',default=[3.0],type=float)
 parser.add_argument('-Q2',default=1.0,type=float)
 parser.add_argument('-sc','--scale',default=False,type=bool)
 parser.add_argument('-N',default=50,type=int)
@@ -34,13 +35,12 @@ parser.add_argument('-save',default='notSaved',type=str)
 parser.add_argument('-sheet',default=1,type=int)
 
 args = vars(parser.parse_args())
-print(args)
 
 m1Name = args['m1']
 m1 = masses[m1Name]
 m2Name = args['m2']
 m2 = masses[m2Name]
-g = args['g']
+gRange = args['g']
 mr = masses[args['mr']]
 Q2 = args['Q2']
 Ffactor = args['A']
@@ -94,23 +94,23 @@ if args['verbose']:
 		print("ei: " + 'sf')
 	else:
 		print("ei: " + str(eiFactor))
-	print("g: " + str(g))
+	print("g: " + str(gRange))
 	print("Q2: " + str(Q2))
 	print("A scale: " + str(Ffactor))
 	print("scale: " + str(scale))
 	print("N: " + str(efSize))
-	print("sf start: " + str(start))
-	print("sf end: " + str(end))
+	print("ef start: " + str(start))
+	print("ef end: " + str(end))
 	print("sheet: " + str(sheet))
 	print("")
 	print("***********************************************")
 	print("")
 
-M1Data = {'full':np.array([]), 'real':np.array([]), 'imag':np.array([]), 'abs':np.array([])}
+M1Data = {'full':np.zeros((len(gRange),efSize),dtype=complex), 'real':np.zeros((len(gRange),efSize)), 'imag':np.zeros((len(gRange),efSize)), 'abs':np.zeros((len(gRange),efSize))}
 AData = {'full':np.array([]), 'real':np.array([]), 'imag':np.array([]), 'abs':np.array([])}
 fData = np.array([])
 GData = {'full':np.array([]), 'real':np.array([]), 'imag':np.array([]), 'abs':np.array([])}
-M2Data = {'full':np.array([]), 'real':np.array([]), 'imag':np.array([]), 'abs':np.array([])}
+M2Data = {'full':np.zeros((len(gRange),efSize),dtype=complex), 'real':np.zeros((len(gRange),efSize)), 'imag':np.zeros((len(gRange),efSize)), 'abs':np.zeros((len(gRange),efSize))}
 WdfData = {'full':np.array([]), 'real':np.array([]), 'imag':np.array([]), 'abs':np.array([])}
 
 #endregion
@@ -118,7 +118,7 @@ WdfData = {'full':np.array([]), 'real':np.array([]), 'imag':np.array([]), 'abs':
 # File opening
 #region
 fileNameG = "G_" + m1Name + "_" + m2Name + "_" + str(eiFactor) + "_" + str(Q2) + "_" + str(start) + "_" + str(end) + "_" + str(efSize) + "_" + str(sheet) + ".txt"
-fileNameWdf = "Wdf_" + m1Name + "_" + m2Name + "_" + str(eiFactor) + "_" + str(Ffactor) + "_" + str(g) + "_" + str(Q2) + "_" + str(start) + "_" + str(end) + "_" + str(efSize) + "_" + str(sheet) + ".txt"
+fileNameWdf = "Wdf_" + m1Name + "_" + m2Name + "_" + str(eiFactor) + "_" + str(Ffactor) + "_" + str(gRange) + "_" + str(Q2) + "_" + str(start) + "_" + str(end) + "_" + str(efSize) + "_" + str(sheet) + ".txt"
 
 fileGOpen = False
 
@@ -141,14 +141,24 @@ for i,ef in enumerate(efRange):
 	if sieqsf:
 		si = sf
 
-	if sheet == 1:
-		M1 = func.M(si,m1,m2,xi,mr,g)
-	elif sheet == 2:
-		M1 = func.MII(si,m1,m2,xi,mr,g)
-	M1Data['full'] = np.append(M1Data['full'],M1)
-	M1Data['real'] = np.append(M1Data['real'],M1.real)
-	M1Data['imag'] = np.append(M1Data['imag'],M1.imag)
-	M1Data['abs'] = np.append(M1Data['abs'],abs(M1))
+	for j,g in enumerate(gRange):
+		if sheet == 1:
+			M1 = func.M(si,m1,m2,xi,mr,g)
+		elif sheet == 2:
+			M1 = func.MII(si,m1,m2,xi,mr,g)
+		M1Data['full'][j][i] = M1
+		M1Data['real'][j][i] = M1.real
+		M1Data['imag'][j][i] = M1.imag
+		M1Data['abs'][j][i] = abs(M1)
+
+		if sheet == 1:
+			M2 = func.M(sf,m1,m2,xi,mr,g)
+		elif sheet == 2:
+			M2 = func.MII(sf,m1,m2,xi,mr,g)
+		M2Data['full'][j][i] = M2
+		M2Data['real'][j][i] = M2.real
+		M2Data['imag'][j][i] = M2.imag
+		M2Data['abs'][j][i] = abs(M2)
 
 	A = func.F(mr,Q2,g,Ffactor)
 	AData['full'] = np.append(AData['full'],A)
@@ -170,27 +180,30 @@ for i,ef in enumerate(efRange):
 		GData['imag'] = np.append(GData['imag'],imag)
 		GData['abs'] = np.append(GData['abs'],abs(G))
 
-	if sheet == 1:
-		M2 = func.M(sf,m1,m2,xi,mr,g)
-	elif sheet == 2:
-		M2 = func.MII(sf,m1,m2,xi,mr,g)
-	M2Data['full'] = np.append(M2Data['full'],M2)
-	M2Data['real'] = np.append(M2Data['real'],M2.real)
-	M2Data['imag'] = np.append(M2Data['imag'],M2.imag)
-	M2Data['abs'] = np.append(M2Data['abs'],abs(M2))
 
 
 ff2 = AData['full']+fData*GData['full']
 Wdf = M1Data['full']*ff2*M2Data['full']
-WdfData['full'] = np.append(WdfData['full'],Wdf)
-WdfData['real'] = np.append(WdfData['real'],Wdf.real)
-WdfData['imag'] = np.append(WdfData['imag'],Wdf.imag)
-WdfData['abs'] = np.append(WdfData['abs'],abs(Wdf))
-
+WdfData['full'] =  Wdf
+WdfData['real'] = Wdf.real
+WdfData['imag'] = Wdf.imag
+WdfData['abs'] = abs(Wdf)
 
 if args['scale']:
 	efRange = np.divide(efRange,scale)
 	print("scale: " + str(scale))
+#endregion
+
+# Search for resonance peak
+#region
+
+# for i,g in enumerate(gRange):
+
+# 	max_index = M2Data['abs'][i].argmax()
+# 	max_ef = efRange[max_index]
+# 	max_amp = WdfData['full'][i][max_index]
+# 	print(f"index={max_index}, g={g}, Wdf={max_amp}, ef={max_ef}")
+
 #endregion
 
 # File writing
@@ -214,10 +227,11 @@ mpl.rcParams['mathtext.it'] = 'Futura:italic'
 mpl.rcParams['mathtext.bf'] = 'Futura:bold'
 
 
-fig = plt.figure(figsize=(16, 10))
+fig = plt.figure(figsize=(16, 9))
 
 plot0 = fig.add_subplot(2,1,1)
-plot0.plot(efRange, WdfData['real'], linewidth=5)
+for i,g in enumerate(gRange):
+	plot0.plot(efRange, WdfData['abs'][i]*100, label=str(g), linewidth=5)
 plot0.set_ylabel(r'$Re\left(\mathcal{W}_{df}\right)\left(\frac{1}{GeV}^{2}\right)$',size=15)
 # plot0.set_ylabel(r'$Re\left(\mathcal{M}\right)$',size=15)
 # plot0.set_ylabel(r'$Re\left(\mathcal{G}\right)\left(\frac{1}{GeV}^{2}\right)$',size=15)
@@ -225,7 +239,8 @@ plt.axvline(eth/scale,color='black')
 # plt.ylim(-700,1500)
 plt.xticks(fontname="Futura",fontsize=15)
 plt.yticks(fontname="Futura",fontsize=15)
-plt.text(0.9,0.9,r'$Im\left(s_{f}\right)=$'+str(imagPart),transform=plot0.transAxes,size=15)
+plt.text(0.85,0.9,r'$Im\left(s_{f}\right)=$'+str(imagPart),transform=plot0.transAxes,size=15)
+plt.legend(title='g',loc='upper right')
 if sieqsf and sheet == 1:
 	plt.title(r'$s_{i} = s_{f}$, Sheet I',size=20)
 elif not sieqsf and sheet == 1:
@@ -236,7 +251,8 @@ elif not sieqsf and sheet == 2:
 	plt.title(r'$s_{i}=$'+str(si)+', Sheet II',size=20)
 
 plot1 = fig.add_subplot(2,1,2)
-plot1.plot(efRange, WdfData['imag'], linewidth=5)
+for i,g in enumerate(gRange):
+	plot1.plot(efRange, WdfData['imag'][i], label=str(g), linewidth=5)
 plot1.set_xlabel(r'$e_{f}$',fontname="Futura",size=15)
 plot1.set_ylabel(r'$Im\left(\mathcal{W}_{df}\right)\left(\frac{1}{GeV}^{2}\right)$',size=15)
 # plot1.set_ylabel(r'$Im\left(\mathcal{M}\right)$',size=15)
