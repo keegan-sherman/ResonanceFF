@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 
 # from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
@@ -28,7 +28,7 @@ parser.add_argument('-N',default=50,type=int)
 parser.add_argument('-start',default=0.9,type=float)
 parser.add_argument('-end',default=2.5,type=float)
 parser.add_argument('-A',default=0.1,type=float)
-parser.add_argument('-show',default=True,type=bool)
+parser.add_argument('-no_show',action='store_false')
 parser.add_argument('-v','--verbose',action='store_true')
 parser.add_argument('-imag',default=0,type=float)
 parser.add_argument('-save',default='notSaved',type=str)
@@ -49,11 +49,12 @@ start = args['start']
 end = args['end']
 imagPart = args['imag']
 efSize = args['N']
-showPlots = args['show']
+showPlots = args['no_show']
 verbose = args['verbose']
 
 if args['ei'] == 'sf':
 	sieqsf = True
+	eiFactor = 1
 	print("Setting si=sf")
 else:
 	sieqsf = False
@@ -102,6 +103,7 @@ if args['verbose']:
 	print("ef start: " + str(start))
 	print("ef end: " + str(end))
 	print("sheet: " + str(sheet))
+	print("show: " + str(showPlots))
 	print("")
 	print("***********************************************")
 	print("")
@@ -269,28 +271,3 @@ if showPlots:
 	plt.show()
 
 #endregion
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
